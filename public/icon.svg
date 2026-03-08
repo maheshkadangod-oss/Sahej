@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="108" fill="#FDF8F4"/>
+  <g transform="translate(256,240)">
+    <path d="M0-85C-30-85-55-70-55-40C-55-10-30 20 0 55C30 20 55-10 55-40C55-70 30-85 0-85Z" fill="none" stroke="#E8B4B8" stroke-width="8" opacity="0.3" transform="scale(2.2)"/>
+    <path d="M0-85C-30-85-55-70-55-40C-55-10-30 20 0 55C30 20 55-10 55-40C55-70 30-85 0-85Z" fill="none" stroke="#C8956C" stroke-width="6" opacity="0.5" transform="scale(1.5)"/>
+    <path d="M0-50C-18-50-32-40-32-22C-32-4-18 14 0 35C18 14 32-4 32-22C32-40 18-50 0-50Z" fill="#E8B4B8"/>
+  </g>
+  <text x="256" y="410" text-anchor="middle" font-family="serif" font-size="72" font-weight="500" fill="#2D312E">Sahej</text>
+</svg>
