@@ -22,6 +22,7 @@ import { helplineData } from './data/helplines';
 import { milestones, parentingTips, resourceLinks } from './data/resources';
 import { MoodEntry, MemoryEntry, UserProfile } from './types';
 import { translations, languages, Language } from './translations';
+import { Analytics } from '@vercel/analytics/react';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -1279,6 +1280,7 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Analytics />
     </div>
   );
 }
