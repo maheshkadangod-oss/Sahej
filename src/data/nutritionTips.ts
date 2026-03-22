@@ -1,0 +1,18 @@
+export const nutritionTips: string[] = [
+  "Iron-rich foods like spinach, lentils, and red meat help replenish stores lost during delivery.",
+  "Breastfeeding moms need about 500 extra calories daily — choose nutrient-dense foods over empty calories.",
+  "Omega-3 fatty acids (salmon, walnuts, chia seeds) support brain health for both you and baby.",
+  "Stay hydrated! Aim for 12-16 cups of water daily, especially if breastfeeding.",
+  "Calcium from dairy, fortified plant milk, or leafy greens helps rebuild bone density after pregnancy.",
+  "Protein at every meal (eggs, beans, chicken, tofu) supports tissue repair and keeps energy steady.",
+  "Vitamin D from sunlight and foods like eggs and fortified cereals boosts mood and immunity.",
+  "Whole grains provide sustained energy — oats, brown rice, and quinoa are excellent choices.",
+  "Healthy fats from avocado, olive oil, and nuts support hormone balance during recovery.",
+  "Fiber from fruits, vegetables, and whole grains helps with postpartum digestive health.",
+  "Zinc from pumpkin seeds, chickpeas, and meat supports wound healing and immune function.",
+  "B vitamins from eggs, legumes, and whole grains help combat postpartum fatigue.",
+  "Turmeric and ginger have natural anti-inflammatory properties — add them to soups and teas.",
+  "Small, frequent meals may be easier than 3 large ones when you're busy with baby.",
+  "Prep-ahead snacks like energy balls, cut fruit, and trail mix make healthy eating easier.",
+  "Folate from leafy greens and citrus remains important for recovery, not just pregnancy.",
+];

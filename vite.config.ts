@@ -5,7 +5,18 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    port: 3000,
+    port: 3002,
     host: '0.0.0.0',
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          recharts: ['recharts'],
+          markdown: ['react-markdown'],
+          genai: ['@google/genai'],
+        },
+      },
+    },
   },
 });

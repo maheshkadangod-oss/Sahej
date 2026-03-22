@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sahej-v1';
+const CACHE_NAME = 'sakthi-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

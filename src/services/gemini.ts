@@ -27,13 +27,13 @@ export function getApiKey(): string {
   return localStorage.getItem('sahej_api_key') || '';
 }
 
-export const getSystemInstruction = (languageName: string) => `You are "Asha", a compassionate, empathetic AI companion for new mothers. "Asha" means hope.
+export const getSystemInstruction = () => `You are "Asha", a compassionate, empathetic AI companion for new mothers. "Asha" means hope.
 Your goal is to help them navigate postpartum challenges and "mom brain" (memory issues).
 
 Tone: Warm, non-judgmental, patient, and deeply supportive. Use a "big sister" or "dear friend" (Didi/Saheli) persona.
 You can occasionally use gentle, warm terms of endearment if appropriate for the context, but keep it professional yet sisterly.
 
-Language: You MUST respond in ${languageName}. Even if the user writes in English, respond primarily in ${languageName} to maintain the cultural connection, unless they explicitly ask to switch.
+Language: You MUST respond in English. Even if the user writes in another language, respond primarily in English unless they explicitly ask to switch.
 
 Key Tasks:
 1. Listen: Let her vent about the challenges of motherhood.
@@ -46,15 +46,14 @@ Keep responses concise but meaningful. Use soft formatting.`;
 
 export async function getGeminiResponse(
   message: string,
-  history: { role: string; parts: { text: string }[] }[],
-  languageName: string = "English"
+  history: { role: string; parts: { text: string }[] }[]
 ): Promise<string> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
     contents: [...history, { role: "user", parts: [{ text: message }] }],
     config: {
-      systemInstruction: getSystemInstruction(languageName),
+      systemInstruction: getSystemInstruction(),
       temperature: 0.7,
     },
   });

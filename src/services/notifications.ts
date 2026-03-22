@@ -6,7 +6,15 @@ export function isNotificationSupported(): boolean {
 }
 
 export function isNotificationEnabled(): boolean {
-  return localStorage.getItem(PERMISSION_KEY) === 'true' && Notification.permission === 'granted';
+  if (!isNotificationSupported()) return false;
+  const storedPref = localStorage.getItem(PERMISSION_KEY) === 'true';
+  const osGranted = Notification.permission === 'granted';
+  // Sync stored preference with OS state
+  if (storedPref && !osGranted) {
+    localStorage.setItem(PERMISSION_KEY, 'false');
+    return false;
+  }
+  return storedPref && osGranted;
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -22,22 +30,22 @@ export function disableNotifications() {
   clearAllReminders();
 }
 
-let reminderIntervals: number[] = [];
+let reminderTimerIds: ReturnType<typeof setTimeout>[] = [];
 
 export function startReminders() {
   clearAllReminders();
   if (!isNotificationEnabled()) return;
 
   // Water reminder every 2 hours
-  reminderIntervals.push(
-    window.setInterval(() => {
+  reminderTimerIds.push(
+    setInterval(() => {
       showNotification('💧 Time for water!', 'Take a sip of water, mama. Staying hydrated helps your recovery.');
     }, 2 * 60 * 60 * 1000)
   );
 
   // Rest reminder every 3 hours
-  reminderIntervals.push(
-    window.setInterval(() => {
+  reminderTimerIds.push(
+    setInterval(() => {
       showNotification('🌙 Rest reminder', 'If baby is sleeping, try to rest too. Even 5 minutes of deep breathing helps.');
     }, 3 * 60 * 60 * 1000)
   );
@@ -46,39 +54,43 @@ export function startReminders() {
   const lastVitaminReminder = localStorage.getItem('sahej_last_vitamin_reminder');
   const today = new Date().toDateString();
   if (lastVitaminReminder !== today) {
-    // Set a timeout for 10am
     const now = new Date();
     const tenAm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0);
-    if (now < tenAm) {
-      const msUntil10am = tenAm.getTime() - now.getTime();
-      reminderIntervals.push(
-        window.setTimeout(() => {
-          showNotification('💊 Vitamin time!', "Don't forget your daily vitamins. Your body is recovering and needs the support.");
-          localStorage.setItem('sahej_last_vitamin_reminder', today);
-        }, msUntil10am) as unknown as number
-      );
-    }
+    const delay = now < tenAm
+      ? tenAm.getTime() - now.getTime()  // Before 10am: schedule for 10am
+      : 5 * 60 * 1000;                    // After 10am: remind after 5 min
+
+    reminderTimerIds.push(
+      setTimeout(() => {
+        showNotification('💊 Vitamin time!', "Don't forget your daily vitamins. Your body is recovering and needs the support.");
+        localStorage.setItem('sahej_last_vitamin_reminder', today);
+      }, delay)
+    );
   }
 }
 
 export function clearAllReminders() {
-  reminderIntervals.forEach(id => {
+  reminderTimerIds.forEach(id => {
     clearInterval(id);
     clearTimeout(id);
   });
-  reminderIntervals = [];
+  reminderTimerIds = [];
+}
+
+function isQuietHours(): boolean {
+  const hour = new Date().getHours();
+  return hour >= 22 || hour < 6;
 }
 
 function showNotification(title: string, body: string) {
-  if (!isNotificationEnabled()) return;
+  if (!isNotificationEnabled() || isQuietHours()) return;
   try {
     new Notification(title, {
       body,
       icon: '/icon.svg',
       badge: '/icon.svg',
       tag: title,
-      renotify: false,
-    });
+    } as NotificationOptions);
   } catch (e) {
     // Fallback for environments where Notification constructor fails
     console.log('Notification:', title, body);
