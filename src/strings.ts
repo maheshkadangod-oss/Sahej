@@ -293,6 +293,7 @@ export const strings: Record<string, any> = {
   insightLoading: "Asha is reflecting on your mood patterns...",
   lastUpdated: "Last updated",
   needMoreData: "Log a few more moods to unlock personalized insights.",
+  insightsNeedKey: "Add your Gemini API key in Settings to unlock AI insights.",
 
   // Nutrition
   nutritionSection: "Nutrition Guide",

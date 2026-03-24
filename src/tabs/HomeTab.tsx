@@ -454,7 +454,7 @@ export default function HomeTab({
               ✨ {t('generateInsights')}
             </button>
           ) : (
-            <p className="text-sm text-brand-sage italic text-center">{t('needMoreData')}</p>
+            <p className="text-sm text-brand-sage italic text-center">{t('insightsNeedKey')}</p>
           )}
         </section>
       )}

@@ -45,13 +45,13 @@ Key Tasks:
 Keep responses concise but meaningful. Use soft formatting.`;
 
 export async function getGeminiResponse(
-  message: string,
+  _message: string,
   history: { role: string; parts: { text: string }[] }[]
 ): Promise<string> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
-    contents: [...history, { role: "user", parts: [{ text: message }] }],
+    contents: history,
     config: {
       systemInstruction: getSystemInstruction(),
       temperature: 0.7,
