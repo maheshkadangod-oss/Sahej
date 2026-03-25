@@ -15,7 +15,9 @@ import type { useAppData } from '../hooks/useAppData';
 import type { useGamification } from '../hooks/useGamification';
 import type { useMoodInsights } from '../hooks/useMoodInsights';
 import type { useNutrition } from '../hooks/useNutrition';
+import type { useCompanion } from '../hooks/useCompanion';
 import AchievementBadges from '../components/AchievementBadges';
+import CompanionWidget from '../components/CompanionWidget';
 import QuestCard from '../components/QuestCard';
 import LegacyLetterCard from '../components/LegacyLetterCard';
 
@@ -45,12 +47,14 @@ type AppData = ReturnType<typeof useAppData>;
 type GamificationData = ReturnType<typeof useGamification>;
 type MoodInsightsData = ReturnType<typeof useMoodInsights>;
 type NutritionData = ReturnType<typeof useNutrition>;
+type CompanionData = ReturnType<typeof useCompanion>;
 
 interface HomeTabProps {
   data: AppData;
   gamification: GamificationData;
   moodInsights: MoodInsightsData;
   nutrition: NutritionData;
+  companion: CompanionData;
   startResetActivity: (activity: ResetActivity) => void;
   setActiveTab: (tab: Tab) => void;
   onTalkToAsha: (message: string) => void;
@@ -269,7 +273,7 @@ const NutritionSection = React.memo(function NutritionSection({ nutrition }: { n
 });
 
 export default function HomeTab({
-  data, gamification, moodInsights, nutrition, startResetActivity, setActiveTab, onTalkToAsha,
+  data, gamification, moodInsights, nutrition, companion, startResetActivity, setActiveTab, onTalkToAsha,
   isBreathing, setIsBreathing, breathPhase, breathLabel,
   kegelActive, setKegelActive, kegelPhase, kegelReps,
 }: HomeTabProps) {
@@ -386,6 +390,9 @@ export default function HomeTab({
         </div>
         <p className="text-center text-xs text-brand-sage mt-4 italic">{t('logHeart')}</p>
       </section>
+
+      {/* Companion */}
+      <CompanionWidget {...companion} setActiveTab={setActiveTab} />
 
       {/* Mood Insights (AI-powered) */}
       {moodInsights.hasEnoughData && (

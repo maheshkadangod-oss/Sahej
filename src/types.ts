@@ -141,3 +141,22 @@ export interface LegacyLetter {
   prompt: string;
   content: string;
 }
+
+// Companion
+export type CompanionSpecies = 'butterfly' | 'bird' | 'deer' | 'fox' | 'rabbit';
+
+export interface CompanionState {
+  species: CompanionSpecies;
+  name: string;
+  xp: number;
+  level: number;
+  lastInteraction: number;
+  tapCount: number;
+  setupComplete: boolean;
+}
+
+export interface TrustedContact {
+  id: string;
+  name: string;
+  phone: string;
+}

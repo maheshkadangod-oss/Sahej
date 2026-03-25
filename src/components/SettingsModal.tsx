@@ -1,11 +1,12 @@
 import React, { useRef } from 'react';
 import {
-  X, Key, Moon, Sun, Bell, BellOff, Download, Upload, RotateCcw, AlertCircle
+  X, Key, Moon, Sun, Bell, BellOff, Download, Upload, RotateCcw, AlertCircle, Users, Plus, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/cn';
 import { t } from '../strings';
 import { isNotificationSupported } from '../services/notifications';
+import type { TrustedContact } from '../types';
 
 interface SettingsModalProps {
   showSettings: boolean;
@@ -22,6 +23,9 @@ interface SettingsModalProps {
   handleExportData: () => void;
   handleImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleResetApp: () => void;
+  trustedContacts: TrustedContact[];
+  addTrustedContact: (name: string, phone: string) => void;
+  removeTrustedContact: (id: string) => void;
 }
 
 export default function SettingsModal({
@@ -34,8 +38,12 @@ export default function SettingsModal({
   handleExportData,
   handleImportData,
   handleResetApp,
+  trustedContacts, addTrustedContact, removeTrustedContact,
 }: SettingsModalProps) {
   const importFileRef = useRef<HTMLInputElement>(null);
+  const [showAddContact, setShowAddContact] = React.useState(false);
+  const [contactName, setContactName] = React.useState('');
+  const [contactPhone, setContactPhone] = React.useState('');
 
   return (
     <AnimatePresence>
@@ -168,6 +176,89 @@ export default function SettingsModal({
                 </div>
               </button>
               <input ref={importFileRef} type="file" accept=".json" onChange={handleImportData} className="hidden" />
+
+              <div className="border-t border-brand-clay/10" />
+
+              {/* Trusted Contacts */}
+              <div className="space-y-3 py-2">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-brand-sage" />
+                  <div>
+                    <span className="text-sm font-medium">{t('trustedContacts')}</span>
+                    <p className="text-[10px] text-brand-sage">{t('trustedContactsDesc')}</p>
+                  </div>
+                </div>
+
+                {trustedContacts.map(c => (
+                  <div key={c.id} className="flex items-center gap-2 bg-white/30 dark:bg-white/5 rounded-xl px-3 py-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.name}</p>
+                      <p className="text-xs text-brand-sage">{c.phone}</p>
+                    </div>
+                    <button
+                      onClick={() => removeTrustedContact(c.id)}
+                      className="p-1.5 rounded-full hover:bg-red-50 active:bg-red-100 transition-colors"
+                      aria-label={t('removeContact')}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </button>
+                  </div>
+                ))}
+
+                {trustedContacts.length < 3 && !showAddContact && (
+                  <button
+                    onClick={() => setShowAddContact(true)}
+                    className="flex items-center gap-2 text-sm text-brand-clay font-medium py-2"
+                  >
+                    <Plus className="w-4 h-4" /> {t('addContact')}
+                  </button>
+                )}
+
+                {trustedContacts.length >= 3 && (
+                  <p className="text-[10px] text-brand-sage italic">{t('maxContacts')}</p>
+                )}
+
+                {showAddContact && (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={contactName}
+                      onChange={e => setContactName(e.target.value)}
+                      placeholder={t('contactName')}
+                      className="w-full px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-brand-sage/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-clay/30 min-h-[40px]"
+                    />
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={contactPhone}
+                      onChange={e => setContactPhone(e.target.value)}
+                      placeholder={t('contactPhone')}
+                      className="w-full px-3 py-2 rounded-xl bg-white/50 dark:bg-white/5 border border-brand-sage/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-clay/30 min-h-[40px]"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (contactName.trim() && contactPhone.trim()) {
+                            addTrustedContact(contactName, contactPhone);
+                            setContactName('');
+                            setContactPhone('');
+                            setShowAddContact(false);
+                          }
+                        }}
+                        className="flex-1 py-2 bg-brand-clay text-white rounded-xl text-sm font-medium min-h-[40px]"
+                      >
+                        {t('saveContact')}
+                      </button>
+                      <button
+                        onClick={() => { setShowAddContact(false); setContactName(''); setContactPhone(''); }}
+                        className="px-4 py-2 bg-brand-sage/10 rounded-xl text-sm text-brand-sage min-h-[40px]"
+                      >
+                        {t('cancel')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="border-t border-brand-clay/10" />
 

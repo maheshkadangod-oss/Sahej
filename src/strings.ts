@@ -376,6 +376,27 @@ export const strings: Record<string, any> = {
     "Write about a hard day that taught you something beautiful.",
     "What does being a mother mean to you right now?",
   ],
+  // Companion
+  companionTitle: "Your Companion",
+  companionChoose: "Choose Your Companion",
+  companionChooseDesc: "Pick a friend to join your wellness journey",
+  companionNamePlaceholder: "Name your companion...",
+  companionBegin: "Begin Journey",
+  companionTap: "Tap to show love!",
+  companionLevelUp: "Level up! Your companion grew!",
+  companionSOS: "Reach Out",
+  companionSOSDesc: "Call someone you trust",
+  companionEdit: "Edit",
+  companionDone: "Done",
+  daysTogether: "days together",
+  trustedContacts: "Trusted Contacts",
+  trustedContactsDesc: "People you can call when you need support",
+  addContact: "Add Contact",
+  contactName: "Name",
+  contactPhone: "Phone number",
+  maxContacts: "Maximum 3 contacts",
+  removeContact: "Remove",
+  saveContact: "Save",
 };
 
 export function t(key: string): any {

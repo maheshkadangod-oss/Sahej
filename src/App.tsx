@@ -9,6 +9,7 @@ import { useKegel } from './hooks/useKegel';
 import { useGamification } from './hooks/useGamification';
 import { useNutrition } from './hooks/useNutrition';
 import { useMoodInsights } from './hooks/useMoodInsights';
+import { useCompanion } from './hooks/useCompanion';
 import { t } from './strings';
 import { getApiKey } from './services/gemini';
 import type { Tab } from './types';
@@ -65,6 +66,21 @@ export default function App() {
 
   const moodInsights = useMoodInsights({
     moods: data.moods,
+    todayStr: data.todayStr,
+    showToast: data.showToast,
+  });
+
+  const companion = useCompanion({
+    moods: data.moods,
+    waterLog: data.waterLog,
+    kegelLog: data.kegelLog,
+    journalEntries: data.journalEntries,
+    gratitudeEntries: data.gratitudeEntries,
+    sleepLog: data.sleepLog,
+    memories: data.memories,
+    earnedBadges: gamification.earnedBadges,
+    wellnessStreak: gamification.wellnessStreak,
+    moodStreak: data.moodStreak,
     todayStr: data.todayStr,
     showToast: data.showToast,
   });
@@ -135,6 +151,7 @@ export default function App() {
                 gamification={gamification}
                 moodInsights={moodInsights}
                 nutrition={nutrition}
+                companion={companion}
                 startResetActivity={resetActivity.startResetActivity}
                 setActiveTab={setActiveTab}
                 onTalkToAsha={onTalkToAsha}
@@ -251,6 +268,9 @@ export default function App() {
           handleExportData={data.handleExportData}
           handleImportData={data.handleImportData}
           handleResetApp={data.handleResetApp}
+          trustedContacts={companion.trustedContacts}
+          addTrustedContact={companion.addTrustedContact}
+          removeTrustedContact={companion.removeTrustedContact}
         />
       </Suspense>
 

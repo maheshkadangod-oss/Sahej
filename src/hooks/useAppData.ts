@@ -418,9 +418,9 @@ export function useAppData() {
       for (const gKey of ['sahej_earned_badges', 'sahej_active_quest', 'sahej_reset_completions', 'sahej_legacy_letters']) {
         try { const v = localStorage.getItem(gKey); if (v) gamificationData[gKey] = JSON.parse(v); } catch { /* skip */ }
       }
-      // Include nutrition & mood insights data from localStorage
+      // Include nutrition, mood insights, and companion data from localStorage
       const nutritionData: Record<string, unknown> = {};
-      for (const nKey of ['sahej_nutrition_profile', 'sahej_meal_suggestions', 'sahej_mood_insights']) {
+      for (const nKey of ['sahej_nutrition_profile', 'sahej_meal_suggestions', 'sahej_mood_insights', 'sahej_companion', 'sahej_trusted_contacts', 'sahej_companion_xp_snap']) {
         try { const v = localStorage.getItem(nKey); if (v) nutritionData[nKey] = JSON.parse(v); } catch { /* skip */ }
       }
       const data = {
@@ -487,8 +487,8 @@ export function useAppData() {
         for (const gKey of ['sahej_earned_badges', 'sahej_active_quest', 'sahej_reset_completions', 'sahej_legacy_letters']) {
           if (data[gKey]) localStorage.setItem(gKey, JSON.stringify(data[gKey]));
         }
-        // Restore nutrition & mood insights data
-        for (const nKey of ['sahej_nutrition_profile', 'sahej_meal_suggestions', 'sahej_mood_insights']) {
+        // Restore nutrition, mood insights, and companion data
+        for (const nKey of ['sahej_nutrition_profile', 'sahej_meal_suggestions', 'sahej_mood_insights', 'sahej_companion', 'sahej_trusted_contacts', 'sahej_companion_xp_snap']) {
           if (data[nKey]) localStorage.setItem(nKey, JSON.stringify(data[nKey]));
         }
         // Restore checklist date if present
@@ -509,7 +509,8 @@ export function useAppData() {
       'sahej_dark_mode', 'sahej_notifications_enabled', 'sahej_user_profile', 'sahej_api_key',
       'sahej_backup_dismissed', 'sahej_kegel', 'sahej_water', 'sahej_journal', 'sahej_baby_milestones',
       'sahej_earned_badges', 'sahej_active_quest', 'sahej_reset_completions', 'sahej_legacy_letters',
-      'sahej_nutrition_profile', 'sahej_meal_suggestions', 'sahej_mood_insights'
+      'sahej_nutrition_profile', 'sahej_meal_suggestions', 'sahej_mood_insights',
+      'sahej_companion', 'sahej_trusted_contacts', 'sahej_companion_xp_snap'
     ];
     keys.forEach(k => localStorage.removeItem(k));
     window.location.reload();
