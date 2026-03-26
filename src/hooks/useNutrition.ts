@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { usePersistedState } from './usePersistedState';
-import { hasApiKey } from '../services/gemini';
-import { GoogleGenAI } from '@google/genai';
+import { hasApiKey, callGemini } from '../services/gemini';
 import { nutritionTips } from '../data/nutritionTips';
 import type { NutritionProfile, MealSuggestion } from '../types';
 
@@ -42,9 +41,6 @@ export function useNutrition({ dayOfYear, showToast }: UseNutritionInput) {
 
     setIsLoading(true);
     try {
-      const apiKey = localStorage.getItem('sahej_api_key')!;
-      const ai = new GoogleGenAI({ apiKey });
-
       const dietLabels: Record<string, string> = {
         vegetarian: 'Vegetarian', vegan: 'Vegan',
         nonVeg: 'Non-Vegetarian', pescatarian: 'Pescatarian',
@@ -69,13 +65,11 @@ Requirements:
 - Make it practical and easy to prepare with one hand if needed
 - Vary suggestions — not always the same type of meal`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: { temperature: 0.9 },
-      });
+      const text = await callGemini(
+        [{ role: 'user', parts: [{ text: prompt }] }],
+        { temperature: 0.9 },
+      );
 
-      const text = response.text || 'Could not generate a suggestion. Please try again.';
       const newSuggestion: MealSuggestion = {
         id: Date.now().toString(),
         timestamp: Date.now(),

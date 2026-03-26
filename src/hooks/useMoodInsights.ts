@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { usePersistedState } from './usePersistedState';
-import { hasApiKey } from '../services/gemini';
-import { GoogleGenAI } from '@google/genai';
+import { hasApiKey, callGemini } from '../services/gemini';
 import type { MoodEntry, MoodInsight } from '../types';
 
 interface UseMoodInsightsInput {
@@ -37,9 +36,6 @@ export function useMoodInsights({ moods, todayStr, showToast }: UseMoodInsightsI
 
     setIsLoading(true);
     try {
-      const apiKey = localStorage.getItem('sahej_api_key')!;
-      const ai = new GoogleGenAI({ apiKey });
-
       const recentMoods = moods.slice(0, 14);
       const moodData = recentMoods
         .map(m => {
@@ -65,13 +61,11 @@ Guidelines:
 - Never diagnose. If concerning, gently suggest talking to a professional.
 - Always end with something encouraging.`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: { temperature: 0.6 },
-      });
+      const text = await callGemini(
+        [{ role: 'user', parts: [{ text: prompt }] }],
+        { temperature: 0.6 },
+      );
 
-      const text = response.text || '';
       let summary = text;
       let concernLevel: MoodInsight['concernLevel'] = 'normal';
 

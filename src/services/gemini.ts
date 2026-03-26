@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 
 let aiInstance: GoogleGenAI | null = null;
 let currentKey: string | null = null;
+let proxyAvailable: boolean | null = null; // null = unknown, true/false = tested
 
 function getAI(): GoogleGenAI {
   const apiKey = localStorage.getItem('sahej_api_key');
@@ -14,7 +15,8 @@ function getAI(): GoogleGenAI {
 }
 
 export function hasApiKey(): boolean {
-  return !!localStorage.getItem('sahej_api_key');
+  // Proxy counts as having a key — user doesn't need to set one
+  return proxyAvailable === true || !!localStorage.getItem('sahej_api_key');
 }
 
 export function saveApiKey(key: string) {
@@ -44,18 +46,83 @@ Key Tasks:
 
 Keep responses concise but meaningful. Use soft formatting.`;
 
-export async function getGeminiResponse(
-  _message: string,
-  history: { role: string; parts: { text: string }[] }[]
+// Try the serverless proxy first, fall back to client-side SDK
+async function callProxy(
+  contents: { role: string; parts: { text: string }[] }[],
+  systemInstruction?: string,
+  temperature = 0.7,
+): Promise<string | null> {
+  try {
+    const resp = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents, systemInstruction, temperature }),
+    });
+    if (resp.status === 503) {
+      // Proxy exists but no server-side key configured
+      proxyAvailable = false;
+      return null;
+    }
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}));
+      throw new Error(data.error || `Proxy error ${resp.status}`);
+    }
+    proxyAvailable = true;
+    const data = await resp.json();
+    return data.text || null;
+  } catch (e) {
+    if (e instanceof TypeError && e.message.includes('fetch')) {
+      // Network error / proxy doesn't exist (local dev)
+      proxyAvailable = false;
+      return null;
+    }
+    throw e; // Re-throw actual API errors (429, etc.)
+  }
+}
+
+async function callClientSDK(
+  contents: { role: string; parts: { text: string }[] }[],
+  systemInstruction?: string,
+  temperature = 0.7,
 ): Promise<string> {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: "gemini-2.0-flash",
-    contents: history,
+    contents,
     config: {
-      systemInstruction: getSystemInstruction(),
-      temperature: 0.7,
+      ...(systemInstruction ? { systemInstruction } : {}),
+      temperature,
     },
   });
   return response.text || "I'm sorry, I couldn't generate a response. Please try again.";
 }
+
+// Unified Gemini call: proxy first, client SDK fallback
+export async function callGemini(
+  contents: { role: string; parts: { text: string }[] }[],
+  options?: { systemInstruction?: string; temperature?: number },
+): Promise<string> {
+  const { systemInstruction, temperature = 0.7 } = options || {};
+
+  // If proxy status unknown or available, try it first
+  if (proxyAvailable !== false) {
+    const result = await callProxy(contents, systemInstruction, temperature);
+    if (result !== null) return result;
+  }
+
+  // Fall back to client-side SDK (requires user's API key)
+  return callClientSDK(contents, systemInstruction, temperature);
+}
+
+// Legacy wrapper for chat (used by useAppData)
+export async function getGeminiResponse(
+  _message: string,
+  history: { role: string; parts: { text: string }[] }[]
+): Promise<string> {
+  return callGemini(history, { systemInstruction: getSystemInstruction() });
+}
+
+// Check proxy availability on module load (non-blocking)
+fetch('/api/gemini', { method: 'OPTIONS' })
+  .then(r => { proxyAvailable = r.ok; })
+  .catch(() => { proxyAvailable = false; });
