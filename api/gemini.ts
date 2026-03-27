@@ -70,6 +70,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (msg.includes('429')) {
       return res.status(429).json({ error: 'Rate limited by Gemini. Try again shortly.' });
     }
-    return res.status(500).json({ error: 'AI service temporarily unavailable.' });
+    if (msg.includes('API_KEY') || msg.includes('401') || msg.includes('403')) {
+      return res.status(401).json({ error: 'Invalid API key configured on server.' });
+    }
+    return res.status(500).json({ error: 'AI service temporarily unavailable.', detail: msg });
   }
 }
