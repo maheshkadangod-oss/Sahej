@@ -87,7 +87,7 @@ async function callClientSDK(
 ): Promise<string> {
   const ai = getAI();
   const response = await ai.models.generateContent({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
     contents,
     config: {
       ...(systemInstruction ? { systemInstruction } : {}),
