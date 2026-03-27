@@ -150,7 +150,6 @@ export default function App() {
                 data={data}
                 gamification={gamification}
                 moodInsights={moodInsights}
-                nutrition={nutrition}
                 companion={companion}
                 startResetActivity={resetActivity.startResetActivity}
                 setActiveTab={setActiveTab}
