@@ -130,9 +130,6 @@ export default function HomeTab({
         <p className="text-center text-xs text-brand-sage mt-4 italic">{t('logHeart')}</p>
       </section>
 
-      {/* Companion */}
-      <CompanionWidget {...companion} setActiveTab={setActiveTab} />
-
       {/* CORE 2: Talk to Asha CTA */}
       <button
         onClick={() => setActiveTab('chat')}
@@ -150,6 +147,9 @@ export default function HomeTab({
         <Phone className="w-4 h-4 text-brand-rose" />
         Emergency Helplines
       </button>
+
+      {/* Companion — below core CTAs */}
+      <CompanionWidget {...companion} setActiveTab={setActiveTab} />
 
       {/* Mood Insights (AI) — shown inline when available */}
       {moodInsights.hasEnoughData && (
