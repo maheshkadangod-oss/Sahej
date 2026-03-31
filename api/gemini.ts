@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
 
 let ai: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI {
@@ -12,10 +13,18 @@ function getAI(): GoogleGenAI {
   return ai;
 }
 
-// Rate limiting: simple in-memory per-IP, 20 requests/minute
+// Rate limiting: in-memory per-IP, 20 requests/minute, with cleanup
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
+
+  // Purge expired entries when map grows large
+  if (rateLimit.size > 500) {
+    for (const [key, entry] of rateLimit) {
+      if (now > entry.resetAt) rateLimit.delete(key);
+    }
+  }
+
   const entry = rateLimit.get(ip);
   if (!entry || now > entry.resetAt) {
     rateLimit.set(ip, { count: 1, resetAt: now + 60_000 });
@@ -27,8 +36,14 @@ function checkRateLimit(ip: string): boolean {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS — restrict to allowed origins, fall back to same-origin only
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.length > 0 && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (ALLOWED_ORIGINS.length === 0) {
+    // No whitelist configured — allow all (dev/initial setup)
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -38,8 +53,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(503).json({ error: 'API not configured. Use client-side key in Settings.' });
   }
 
-  // Rate limit
-  const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 'unknown';
+  // Rate limit — use x-real-ip (set by Vercel) to prevent x-forwarded-for spoofing
+  const ip = (req.headers['x-real-ip'] as string)
+    || (req.headers['x-forwarded-for'] as string)?.split(',')[0]
+    || 'unknown';
   if (!checkRateLimit(ip)) {
     return res.status(429).json({ error: 'Too many requests. Try again in a minute.' });
   }
@@ -73,6 +90,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (msg.includes('API_KEY') || msg.includes('401') || msg.includes('403')) {
       return res.status(401).json({ error: 'Invalid API key configured on server.' });
     }
-    return res.status(500).json({ error: 'AI service temporarily unavailable.', detail: msg });
+    return res.status(500).json({ error: 'AI service temporarily unavailable.' });
   }
 }
