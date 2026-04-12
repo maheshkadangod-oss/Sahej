@@ -115,6 +115,7 @@ export function useAppData() {
   const [welcomeName, setWelcomeName] = useState('');
   const [welcomeBabyName, setWelcomeBabyName] = useState('');
   const [welcomeBabyBirth, setWelcomeBabyBirth] = useState('');
+  const [welcomeEmail, setWelcomeEmail] = useState('');
 
   // Local input states
   const [searchQuery, setSearchQuery] = useState('');
@@ -552,6 +553,7 @@ export function useAppData() {
     welcomeName, setWelcomeName,
     welcomeBabyName, setWelcomeBabyName,
     welcomeBabyBirth, setWelcomeBabyBirth,
+    welcomeEmail, setWelcomeEmail,
     searchQuery, setSearchQuery,
     memoryInput, setMemoryInput,
     winInput, setWinInput,

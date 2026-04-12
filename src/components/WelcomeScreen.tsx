@@ -1,6 +1,7 @@
 import { Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { t } from '../strings';
+import { registerUser } from '../services/adminApi';
 
 interface WelcomeScreenProps {
   welcomeName: string;
@@ -9,6 +10,8 @@ interface WelcomeScreenProps {
   setWelcomeBabyName: (v: string) => void;
   welcomeBabyBirth: string;
   setWelcomeBabyBirth: (v: string) => void;
+  welcomeEmail: string;
+  setWelcomeEmail: (v: string) => void;
   onGetStarted: () => void;
   onGuestContinue: () => void;
 }
@@ -17,8 +20,16 @@ export default function WelcomeScreen({
   welcomeName, setWelcomeName,
   welcomeBabyName, setWelcomeBabyName,
   welcomeBabyBirth, setWelcomeBabyBirth,
+  welcomeEmail, setWelcomeEmail,
   onGetStarted, onGuestContinue
 }: WelcomeScreenProps) {
+  const handleGetStarted = () => {
+    // Fire-and-forget registration if email provided
+    if (welcomeEmail.trim() && welcomeEmail.includes('@')) {
+      registerUser(welcomeName.trim() || 'Mama', welcomeEmail.trim());
+    }
+    onGetStarted();
+  };
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center max-w-md mx-auto bg-brand-cream px-8 relative overflow-hidden">
       <div className="absolute top-[-10%] right-[-10%] w-72 h-72 bg-brand-rose/15 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
@@ -65,10 +76,18 @@ export default function WelcomeScreen({
               className="w-full bg-white/60 border border-brand-clay/20 rounded-2xl py-3.5 px-5 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm text-center"
             />
           </div>
+          <input
+            type="email"
+            placeholder="Your email (optional — for updates)"
+            value={welcomeEmail}
+            onChange={(e) => setWelcomeEmail(e.target.value)}
+            enterKeyHint="done"
+            className="w-full bg-white/60 border border-brand-clay/20 rounded-2xl py-3.5 px-5 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm text-center"
+          />
         </div>
 
         <button
-          onClick={onGetStarted}
+          onClick={handleGetStarted}
           className="w-full py-4 bg-brand-clay text-white rounded-2xl text-sm font-medium hover:bg-brand-clay/90 active:bg-brand-clay/80 transition-all press-effect min-h-[52px] mb-4"
         >
           {t('getStarted')}

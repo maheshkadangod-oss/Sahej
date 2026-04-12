@@ -28,6 +28,8 @@ const ChatTab = React.lazy(() => import('./tabs/ChatTab'));
 const HelpTab = React.lazy(() => import('./tabs/HelpTab'));
 const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
 const ResetActivityModal = React.lazy(() => import('./components/ResetActivityModal'));
+const FeedbackForm = React.lazy(() => import('./components/FeedbackForm'));
+const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 
 function LoadingFallback() {
   return (
@@ -39,6 +41,8 @@ function LoadingFallback() {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const data = useAppData();
   const resetActivity = useResetActivity();
   const breathing = useBreathing();
@@ -112,6 +116,8 @@ export default function App() {
         setWelcomeBabyName={data.setWelcomeBabyName}
         welcomeBabyBirth={data.welcomeBabyBirth}
         setWelcomeBabyBirth={data.setWelcomeBabyBirth}
+        welcomeEmail={data.welcomeEmail}
+        setWelcomeEmail={data.setWelcomeEmail}
         onGetStarted={data.handleGetStarted}
         onGuestContinue={data.handleGuestContinue}
       />
@@ -270,6 +276,25 @@ export default function App() {
           trustedContacts={companion.trustedContacts}
           addTrustedContact={companion.addTrustedContact}
           removeTrustedContact={companion.removeTrustedContact}
+          onShowFeedback={() => setShowFeedback(true)}
+          onShowAdmin={() => setShowAdmin(true)}
+        />
+      </Suspense>
+
+      {/* Feedback Form */}
+      <Suspense fallback={null}>
+        <FeedbackForm
+          show={showFeedback}
+          onClose={() => setShowFeedback(false)}
+          showToast={data.showToast}
+        />
+      </Suspense>
+
+      {/* Admin Dashboard */}
+      <Suspense fallback={null}>
+        <AdminDashboard
+          show={showAdmin}
+          onClose={() => setShowAdmin(false)}
         />
       </Suspense>
 

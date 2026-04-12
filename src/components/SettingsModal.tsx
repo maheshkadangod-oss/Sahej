@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   X, Key, Moon, Sun, Bell, BellOff, Download, Upload, RotateCcw, AlertCircle, Users, Plus, Trash2
 } from 'lucide-react';
@@ -26,6 +26,8 @@ interface SettingsModalProps {
   trustedContacts: TrustedContact[];
   addTrustedContact: (name: string, phone: string) => void;
   removeTrustedContact: (id: string) => void;
+  onShowFeedback: () => void;
+  onShowAdmin: () => void;
 }
 
 export default function SettingsModal({
@@ -39,11 +41,23 @@ export default function SettingsModal({
   handleImportData,
   handleResetApp,
   trustedContacts, addTrustedContact, removeTrustedContact,
+  onShowFeedback, onShowAdmin,
 }: SettingsModalProps) {
   const importFileRef = useRef<HTMLInputElement>(null);
-  const [showAddContact, setShowAddContact] = React.useState(false);
-  const [contactName, setContactName] = React.useState('');
-  const [contactPhone, setContactPhone] = React.useState('');
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [versionTaps, setVersionTaps] = useState(0);
+
+  const handleVersionTap = () => {
+    const next = versionTaps + 1;
+    setVersionTaps(next);
+    if (next >= 5) {
+      setVersionTaps(0);
+      setShowSettings(false);
+      onShowAdmin();
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -287,10 +301,23 @@ export default function SettingsModal({
 
               <div className="border-t border-brand-clay/10" />
 
-              {/* About */}
+              {/* Feedback */}
+              <button
+                onClick={() => { setShowSettings(false); onShowFeedback(); }}
+                className="w-full py-3 bg-brand-gold/15 text-brand-clay rounded-2xl text-sm font-medium press-effect min-h-[44px]"
+              >
+                💬 Share Your Experience
+              </button>
+
+              {/* About — tap version 5x for admin */}
               <div className="text-center space-y-1 pb-2">
                 <p className="text-sm font-serif font-medium text-brand-ink">{t('appName')}</p>
-                <p className="text-[10px] text-brand-sage">v1.3.0 &middot; Made with love for every mama</p>
+                <p
+                  onClick={handleVersionTap}
+                  className="text-[10px] text-brand-sage cursor-default select-none"
+                >
+                  v1.3.0 &middot; Made with love for every mama
+                </p>
               </div>
             </div>
           </motion.div>
