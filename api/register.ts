@@ -10,7 +10,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!rateLimit(ip, 5)) return res.status(429).json({ error: 'Too many requests' });
 
   try {
-    const { name, email } = req.body;
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const { name, email } = body;
     if (!email || typeof email !== 'string' || !email.includes('@')) {
       return res.status(400).json({ error: 'Valid email required' });
     }

@@ -1,6 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getRedis, cors, rateLimit, verifyAdmin, ADMIN_EMAILS } from './_shared';
 
+// In-memory fallback when Redis is not configured
+const memoryTokens = new Map<string, string>();
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   cors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -12,27 +15,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const ip = (req.headers['x-real-ip'] as string) || 'unknown';
     if (!rateLimit(ip, 5)) return res.status(429).json({ error: 'Too many attempts' });
 
-    const { email } = req.body;
-    if (!email || !ADMIN_EMAILS.includes(email.toLowerCase().trim())) {
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const email = body.email;
+    if (!email || !ADMIN_EMAILS.includes(String(email).toLowerCase().trim())) {
       return res.status(403).json({ error: 'Not authorized' });
     }
 
-    if (!redis) return res.status(503).json({ error: 'Database not configured' });
-
     const token = crypto.randomUUID();
-    await redis.set(`admin_session_${token}`, email.toLowerCase().trim(), { ex: 7 * 24 * 3600 }); // 7 day TTL
+    const normalizedEmail = String(email).toLowerCase().trim();
+
+    if (redis) {
+      await redis.set(`admin_session_${token}`, normalizedEmail, { ex: 7 * 24 * 3600 });
+    } else {
+      // Fallback: store in memory (lost on cold start, but works for testing)
+      memoryTokens.set(token, normalizedEmail);
+    }
 
     return res.status(200).json({ token });
   }
 
   // GET = dashboard data (requires token)
   if (req.method === 'GET') {
-    if (!redis) return res.status(200).json({ users: [], feedback: [] });
-    const admin = await verifyAdmin(req, redis);
-    if (!admin) return res.status(401).json({ error: 'Unauthorized' });
+    // Verify admin token
+    const auth = req.headers.authorization;
+    if (!auth?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+    const token = auth.slice(7);
 
-    const users = await redis.get<any[]>('registered_users') || [];
-    const feedback = await redis.get<any[]>('feedback_items') || [];
+    let adminEmail: string | null = null;
+    if (redis) {
+      adminEmail = await redis.get<string>(`admin_session_${token}`);
+    } else {
+      adminEmail = memoryTokens.get(token) || null;
+    }
+
+    if (!adminEmail || !ADMIN_EMAILS.includes(adminEmail)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Fetch data
+    const users = redis ? (await redis.get<any[]>('registered_users') || []) : [];
+    const feedback = redis ? (await redis.get<any[]>('feedback_items') || []) : [];
 
     return res.status(200).json({
       users,

@@ -22,7 +22,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const ip = (req.headers['x-real-ip'] as string) || 'unknown';
     if (!rateLimit(ip, 3)) return res.status(429).json({ error: 'Too many requests' });
 
-    const { message, email } = req.body;
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const { message, email } = body;
     if (!message || typeof message !== 'string' || message.trim().length < 3) {
       return res.status(400).json({ error: 'Message required (min 3 characters)' });
     }
