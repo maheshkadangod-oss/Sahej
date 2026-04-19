@@ -28,6 +28,7 @@ interface SettingsModalProps {
   removeTrustedContact: (id: string) => void;
   onShowFeedback: () => void;
   onShowAdmin: () => void;
+  onShareWithFamily: () => void;
 }
 
 export default function SettingsModal({
@@ -41,7 +42,7 @@ export default function SettingsModal({
   handleImportData,
   handleResetApp,
   trustedContacts, addTrustedContact, removeTrustedContact,
-  onShowFeedback, onShowAdmin,
+  onShowFeedback, onShowAdmin, onShareWithFamily,
 }: SettingsModalProps) {
   const importFileRef = useRef<HTMLInputElement>(null);
   const [showAddContact, setShowAddContact] = useState(false);
@@ -300,6 +301,15 @@ export default function SettingsModal({
               </div>
 
               <div className="border-t border-brand-clay/10" />
+
+              {/* Share with family */}
+              <button
+                onClick={() => { setShowSettings(false); onShareWithFamily(); }}
+                className="w-full py-3 bg-brand-rose/15 text-brand-ink rounded-2xl text-sm font-medium press-effect min-h-[44px]"
+              >
+                🤝 Share with Family
+                <span className="block text-[10px] text-brand-sage font-normal mt-0.5">Let them see how you've been, without an app install</span>
+              </button>
 
               {/* Feedback */}
               <button

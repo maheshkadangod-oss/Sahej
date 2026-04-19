@@ -59,3 +59,44 @@ export async function fetchDashboard(token: string): Promise<{
     return null;
   }
 }
+
+// Share-with-partner types + calls
+export interface SharedMoodSummary {
+  displayName: string;
+  moodSummary: {
+    avgMood: number | null;
+    streak: number;
+    trend: string;
+    weekMoods: { date: string; level: number }[];
+  };
+  createdAt: number;
+}
+
+export async function createShareLink(
+  displayName: string,
+  moodSummary: SharedMoodSummary['moodSummary'],
+): Promise<string | null> {
+  try {
+    const resp = await fetch('/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ displayName, moodSummary }),
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (!data.token) return null;
+    return `${window.location.origin}/share/${data.token}`;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchSharedSummary(token: string): Promise<SharedMoodSummary | null> {
+  try {
+    const resp = await fetch(`/api/share?token=${encodeURIComponent(token)}`);
+    if (!resp.ok) return null;
+    return resp.json();
+  } catch {
+    return null;
+  }
+}

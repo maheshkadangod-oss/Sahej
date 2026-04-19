@@ -12,6 +12,8 @@ import { useMoodInsights } from './hooks/useMoodInsights';
 import { useCompanion } from './hooks/useCompanion';
 import { t } from './strings';
 import { getApiKey } from './services/gemini';
+import { createShareLink } from './services/adminApi';
+import { format } from 'date-fns';
 import type { Tab } from './types';
 
 // Eagerly loaded components
@@ -30,6 +32,7 @@ const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
 const ResetActivityModal = React.lazy(() => import('./components/ResetActivityModal'));
 const FeedbackForm = React.lazy(() => import('./components/FeedbackForm'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
+const ShareView = React.lazy(() => import('./components/ShareView'));
 
 function LoadingFallback() {
   return (
@@ -40,6 +43,20 @@ function LoadingFallback() {
 }
 
 export default function App() {
+  // Share view route — render a read-only mood summary without the rest of the app.
+  // Done at the top-level (before any hooks) so we never mount the main app's hooks on the share page.
+  const shareMatch = typeof window !== 'undefined' ? window.location.pathname.match(/^\/share\/([^/?#]+)/) : null;
+  if (shareMatch) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <ShareView token={shareMatch[1]} />
+      </Suspense>
+    );
+  }
+  return <MainApp />;
+}
+
+function MainApp() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [showFeedback, setShowFeedback] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -94,6 +111,32 @@ export default function App() {
     setActiveTab('chat');
   }, [data.setInputMessage]);
 
+  const handleShareWithFamily = useCallback(async () => {
+    const displayName = data.displayName || 'Mama';
+    const weekMoodsForShare = data.weekMoods.slice(0, 7).map(m => ({
+      date: format(m.timestamp, 'MMM d'),
+      level: m.level,
+    }));
+    data.showToast('Creating share link...');
+    const url = await createShareLink(displayName, {
+      avgMood: data.avgMood ? parseFloat(data.avgMood) : null,
+      streak: data.moodStreak,
+      trend: data.moodTrend,
+      weekMoods: weekMoodsForShare,
+    });
+    if (!url) {
+      data.showToast('Could not create link. Try again later.');
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      data.showToast('Link copied! Expires in 30 days.');
+    } catch {
+      // Clipboard API not available — show the link in a prompt fallback
+      window.prompt('Copy this link to share:', url);
+    }
+  }, [data.displayName, data.weekMoods, data.avgMood, data.moodStreak, data.moodTrend, data.showToast]);
+
   // Log kegel completion
   useEffect(() => {
     if (!kegel.kegelActive && kegel.kegelReps >= 10) {
@@ -139,10 +182,10 @@ export default function App() {
         <div className="flex flex-col items-end gap-2">
           <button
             onClick={() => { data.setApiKeyInput(getApiKey()); data.setShowSettings(true); }}
-            className="p-2.5 rounded-full hover:bg-black/5 active:bg-black/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-3 rounded-full hover:bg-black/5 active:bg-black/10 transition-colors min-w-[52px] min-h-[52px] flex items-center justify-center"
             aria-label={t('settings')}
           >
-            <Settings className="w-5 h-5 text-brand-ink/60" />
+            <Settings className="w-6 h-6 text-brand-ink/60" />
           </button>
         </div>
       </header>
@@ -278,6 +321,7 @@ export default function App() {
           removeTrustedContact={companion.removeTrustedContact}
           onShowFeedback={() => setShowFeedback(true)}
           onShowAdmin={() => setShowAdmin(true)}
+          onShareWithFamily={handleShareWithFamily}
         />
       </Suspense>
 

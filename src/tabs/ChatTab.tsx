@@ -1,11 +1,12 @@
 import React from 'react';
-import { Sparkles, Send, Key, AlertCircle } from 'lucide-react';
+import { Sparkles, Send, Key, AlertCircle, Mic, MicOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import Markdown from 'react-markdown';
 import { cn } from '../lib/cn';
 import { t } from '../strings';
 import { hasApiKey } from '../services/gemini';
+import { useVoiceInput } from '../hooks/useVoiceInput';
 import type { ChatMessage } from '../types';
 
 interface ChatTabProps {
@@ -28,6 +29,11 @@ export default React.memo(function ChatTab({
   chatEndRef, handleSendMessage,
   chatPrompts,
 }: ChatTabProps) {
+  const { isListening, isSupported, startListening, stopListening } = useVoiceInput({
+    onTranscript: (text) => setInputMessage(text),
+  });
+  const toggleVoice = () => (isListening ? stopListening() : startListening());
+
   return (
     <motion.div key="chat" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col" style={{ height: 'calc(100dvh - 180px)' }}>
       <div className="flex items-center justify-between mb-4">
@@ -117,9 +123,26 @@ export default React.memo(function ChatTab({
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
           enterKeyHint="send"
-          placeholder={t('typeHeart')}
-          className="w-full bg-white/80 dark:bg-white/5 border border-brand-rose/20 rounded-full py-4 px-6 pr-14 focus:outline-none focus:ring-2 focus:ring-brand-rose/30"
+          placeholder={isListening ? 'Listening…' : t('typeHeart')}
+          className={cn(
+            "w-full bg-white/80 dark:bg-white/5 border border-brand-rose/20 rounded-full py-4 px-6 focus:outline-none focus:ring-2 focus:ring-brand-rose/30",
+            isSupported ? 'pr-24' : 'pr-14'
+          )}
         />
+        {isSupported && (
+          <button
+            onClick={toggleVoice}
+            className={cn(
+              "absolute right-14 top-1/2 -translate-y-1/2 p-2.5 rounded-full transition-all press-effect min-w-[44px] min-h-[44px] flex items-center justify-center",
+              isListening
+                ? 'bg-red-500 text-white animate-pulse'
+                : 'bg-brand-rose/10 text-brand-rose hover:bg-brand-rose/20'
+            )}
+            aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+          >
+            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
+        )}
         <button
           onClick={handleSendMessage}
           disabled={!inputMessage.trim() || isTyping}
@@ -127,6 +150,9 @@ export default React.memo(function ChatTab({
         >
           <Send className="w-5 h-5" />
         </button>
+        {isListening && (
+          <span className="sr-only" aria-live="polite">Listening for your voice. Tap again to stop.</span>
+        )}
       </div>
     </motion.div>
   );

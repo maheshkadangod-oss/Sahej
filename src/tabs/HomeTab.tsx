@@ -139,12 +139,12 @@ export default function HomeTab({
         Talk to Asha
       </button>
 
-      {/* CORE 3: Emergency Help — always visible, compact */}
+      {/* CORE 3: Emergency Help — prominent, always visible */}
       <button
         onClick={() => setActiveTab('help')}
-        className="w-full py-3 bg-brand-rose/10 border border-brand-rose/20 text-brand-ink/70 rounded-2xl text-sm flex items-center justify-center gap-2 min-h-[44px]"
+        className="w-full py-4 bg-brand-rose text-white rounded-2xl text-base font-medium flex items-center justify-center gap-2.5 min-h-[56px] shadow-md press-effect"
       >
-        <Phone className="w-4 h-4 text-brand-rose" />
+        <Phone className="w-5 h-5" />
         Emergency Helplines
       </button>
 
