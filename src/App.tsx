@@ -144,6 +144,22 @@ function MainApp() {
     }
   }, [kegel.kegelActive, kegel.kegelReps]);
 
+  // Micro-achievement: gentle toast once per day on app open
+  useEffect(() => {
+    if (data.showWelcome) return;
+    if (data.lastMicroAchievement === data.todayStr) return;
+    import('./data/reassurances').then(({ microAchievements }) => {
+      const msg = microAchievements[data.dayOfYear % microAchievements.length];
+      // Small delay so it doesn't collide with mount transitions
+      const t = setTimeout(() => {
+        data.showToast(msg);
+        localStorage.setItem('sahej_last_microachievement', data.todayStr);
+        data.setLastMicroAchievement(data.todayStr);
+      }, 900);
+      return () => clearTimeout(t);
+    });
+  }, [data.showWelcome, data.lastMicroAchievement, data.todayStr, data.dayOfYear]);
+
   // Tab change scroll
   useEffect(() => {
     data.mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });

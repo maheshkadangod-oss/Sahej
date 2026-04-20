@@ -14,6 +14,9 @@ import type { useGamification } from '../hooks/useGamification';
 import type { useMoodInsights } from '../hooks/useMoodInsights';
 import type { useCompanion } from '../hooks/useCompanion';
 import CompanionWidget from '../components/CompanionWidget';
+import ReassuranceCard from '../components/ReassuranceCard';
+import NightComfortCard from '../components/NightComfortCard';
+import QuickStateActions from '../components/QuickStateActions';
 
 // The resetActivities config
 const resetActivities = [
@@ -85,6 +88,14 @@ export default function HomeTab({
   return (
     <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
 
+      {/* 3AM Mode — shown first if late night */}
+      {data.isLateNight && (
+        <NightComfortCard
+          displayName={displayName}
+          onTalkToAsha={() => onTalkToAsha("I'm awake at night and could use some company.")}
+        />
+      )}
+
       {/* ====== ZONE 1: CORE (always visible) ====== */}
 
       {/* Greeting */}
@@ -147,6 +158,12 @@ export default function HomeTab({
         <Phone className="w-5 h-5" />
         Emergency Helplines
       </button>
+
+      {/* Quick State Actions — tap how you feel, get an immediate micro-activity */}
+      <QuickStateActions dayOfYear={data.dayOfYear} />
+
+      {/* Daily Reassurance — single rotating card */}
+      <ReassuranceCard dayOfYear={data.dayOfYear} />
 
       {/* Companion — below core CTAs */}
       <CompanionWidget {...companion} setActiveTab={setActiveTab} />

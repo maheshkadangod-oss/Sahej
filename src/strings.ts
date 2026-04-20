@@ -295,6 +295,16 @@ export const strings: Record<string, any> = {
   needMoreData: "Log a few more moods to unlock personalized insights.",
   insightsNeedKey: "Add your Gemini API key in Settings to unlock AI insights.",
 
+  // Quick state actions
+  feelingStuckTitle: "Feeling stuck?",
+  feelingStuckSub: "Tap how you feel. I'll meet you there.",
+  closeAction: "Close",
+  doneAction: "I'm okay now",
+  needBaby: "Hold a finger on your chest. Just feel yourself breathing.",
+  nightComfortTitle: "It's late. You're awake.",
+  nightComfortBody: "Feeding. Worrying. Just staring at the ceiling. Whatever it is — I'm here. You don't have to do anything. Just rest your eyes.",
+  nightComfortAction: "Stay in quiet mode",
+
   // Nutrition
   nutritionSection: "Nutrition Guide",
   getMealSuggestion: "Get Meal Idea",

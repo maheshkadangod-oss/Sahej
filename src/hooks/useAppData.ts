@@ -68,6 +68,7 @@ export function useAppData() {
   // Backup tracking
   const [lastExport, setLastExport] = useState(() => localStorage.getItem('sahej_last_export') || '');
   const [backupDismissed, setBackupDismissed] = useState(() => localStorage.getItem('sahej_backup_dismissed') || '');
+  const [lastMicroAchievement, setLastMicroAchievement] = useState(() => localStorage.getItem('sahej_last_microachievement') || '');
 
   // Notifications
   const [notificationsOn, setNotificationsOn] = useState(() => isNotificationEnabled());
@@ -143,6 +144,12 @@ export function useAppData() {
   const todayStr = useMemo(() => new Date().toDateString(), []);
 
   const dayOfYear = useMemo(() => Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)), []);
+
+  // 3 AM Mode: true between 23:00 and 05:00 local time
+  const isLateNight = useMemo(() => {
+    const hour = new Date().getHours();
+    return hour >= 23 || hour < 5;
+  }, []);
 
   const affirmations: string[] = t('affirmations') || [];
   const dailyAffirmation = affirmations[dayOfYear % affirmations.length] || '';
@@ -511,7 +518,8 @@ export function useAppData() {
       'sahej_backup_dismissed', 'sahej_kegel', 'sahej_water', 'sahej_journal', 'sahej_baby_milestones',
       'sahej_earned_badges', 'sahej_active_quest', 'sahej_reset_completions', 'sahej_legacy_letters',
       'sahej_nutrition_profile', 'sahej_meal_suggestions', 'sahej_mood_insights',
-      'sahej_companion', 'sahej_trusted_contacts', 'sahej_companion_xp_snap'
+      'sahej_companion', 'sahej_trusted_contacts', 'sahej_companion_xp_snap',
+      'sahej_last_microachievement'
     ];
     keys.forEach(k => localStorage.removeItem(k));
     window.location.reload();
@@ -534,6 +542,7 @@ export function useAppData() {
     darkMode, setDarkMode,
     lastExport, setLastExport,
     backupDismissed, setBackupDismissed,
+    lastMicroAchievement, setLastMicroAchievement,
 
     // UI state
     showWelcome, setShowWelcome,
@@ -570,6 +579,7 @@ export function useAppData() {
     // Derived values
     todayStr,
     dayOfYear,
+    isLateNight,
     dailyAffirmation,
     circleMessage,
     dailyTip,
