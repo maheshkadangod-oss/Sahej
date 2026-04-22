@@ -4,6 +4,7 @@ import { usePersistedState } from './usePersistedState';
 import { useToast } from './useToast';
 import { t } from '../strings';
 import { getGeminiResponse, hasApiKey, saveApiKey, getApiKey } from '../services/gemini';
+import { detectCrisis, CRISIS_RESPONSE, WATCHFUL_RESPONSE, logCrisisEvent } from '../services/crisisDetection';
 import {
   isNotificationEnabled, requestNotificationPermission,
   disableNotifications, startReminders, clearAllReminders
@@ -11,7 +12,7 @@ import {
 import type {
   MoodEntry, MemoryEntry, UserProfile, SleepEntry, KegelEntry,
   WaterEntry, JournalEntry, GratitudeEntry, BabyMilestone, ChatMessage,
-  ChecklistItem, BabysLast
+  ChecklistItem, BabysLast, ResourceSubTab
 } from '../types';
 
 function getDefaultChecklist(): ChecklistItem[] {
@@ -104,6 +105,7 @@ export function useAppData() {
   const [isTyping, setIsTyping] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [chatError, setChatError] = useState('');
+  const [crisisSurfaceShown, setCrisisSurfaceShown] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -129,7 +131,7 @@ export function useAppData() {
   const [pendingSleepHours, setPendingSleepHours] = useState<number | null>(null);
 
   // Resource sub-tab
-  const [resourceSubTab, setResourceSubTab] = useState<'helplines' | 'growth' | 'tips' | 'resources' | 'partner'>('helplines');
+  const [resourceSubTab, setResourceSubTab] = useState<ResourceSubTab>('helplines');
   const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
   const [expandedMilestone, setExpandedMilestone] = useState<number | null>(null);
   const [expandedPartnerSection, setExpandedPartnerSection] = useState<string | null>(null);
@@ -381,13 +383,36 @@ export function useAppData() {
   const handleSendMessage = useCallback(async () => {
     if (!inputMessage.trim()) return;
     setChatError('');
+
+    // Crisis detection — ALWAYS runs, even if no API key.
+    // We want safety surface regardless of whether Asha can respond.
+    const { severity } = detectCrisis(inputMessage);
+
+    const userMsg: ChatMessage = { role: 'user', parts: [{ text: inputMessage }], timestamp: Date.now() };
+    setChatHistory(prev => [...prev, userMsg]);
+    setInputMessage('');
+
+    if (severity === 'crisis') {
+      // Show emergency surface + canned response. Do NOT call AI.
+      setCrisisSurfaceShown(true);
+      setChatHistory(prev => [...prev, { role: 'model', parts: [{ text: CRISIS_RESPONSE }], timestamp: Date.now() }]);
+      logCrisisEvent('crisis');
+      return;
+    }
+
+    if (severity === 'watchful') {
+      // Show emergency surface gently + gentle AI acknowledgement.
+      setCrisisSurfaceShown(true);
+      setChatHistory(prev => [...prev, { role: 'model', parts: [{ text: WATCHFUL_RESPONSE }], timestamp: Date.now() }]);
+      logCrisisEvent('watchful');
+      return;
+    }
+
+    // Normal path — call AI
     if (!hasApiKey()) {
       setChatError(t('chatNeedsKey'));
       return;
     }
-    const userMsg: ChatMessage = { role: 'user', parts: [{ text: inputMessage }], timestamp: Date.now() };
-    setChatHistory(prev => [...prev, userMsg]);
-    setInputMessage('');
     setIsTyping(true);
     try {
       const apiHistory = [...chatHistory.map(({ role, parts }) => ({ role, parts })), { role: 'user' as const, parts: [{ text: inputMessage }] }];
@@ -555,6 +580,7 @@ export function useAppData() {
     isTyping, setIsTyping,
     inputMessage, setInputMessage,
     chatError, setChatError,
+    crisisSurfaceShown, setCrisisSurfaceShown,
     chatEndRef, mainRef,
     showMoodNote, setShowMoodNote,
     pendingMoodLevel, setPendingMoodLevel,

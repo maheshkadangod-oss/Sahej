@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import {
@@ -17,14 +17,32 @@ interface MoodTabProps {
   moodTrend: string;
   darkMode: boolean;
   moodLabel: (level: number) => string;
+  onStartEPDS: () => void;
 }
 
 export default React.memo(function MoodTab({
-  moods, setMoods, chartData, weekMoods, avgMood, moodTrend, darkMode, moodLabel
+  moods, setMoods, chartData, weekMoods, avgMood, moodTrend, darkMode, moodLabel, onStartEPDS
 }: MoodTabProps) {
   return (
     <motion.div key="mood" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
       <h2 className="text-2xl font-medium">{t('moodJourney')}</h2>
+
+      {/* EPDS Screening CTA — a deeper check-in */}
+      <motion.button
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        onClick={onStartEPDS}
+        className="w-full flex items-center gap-3 p-4 bg-brand-sage/10 border border-brand-sage/20 rounded-2xl text-left hover:bg-brand-sage/15 active:bg-brand-sage/20 transition-colors min-h-[64px] press-effect"
+      >
+        <div className="w-10 h-10 bg-brand-sage/20 rounded-full flex items-center justify-center shrink-0">
+          <Heart className="w-5 h-5 text-brand-sage" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-brand-ink dark:text-brand-cream">Deeper emotional check-in</p>
+          <p className="text-[11px] text-brand-sage italic mt-0.5">10 questions · used by doctors · 2 minutes</p>
+        </div>
+      </motion.button>
 
       {/* Weekly Summary */}
       {weekMoods.length > 0 && (

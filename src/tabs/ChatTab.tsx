@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Send, Key, AlertCircle, Mic, MicOff } from 'lucide-react';
+import { Sparkles, Send, Key, AlertCircle, Mic, MicOff, Phone, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import Markdown from 'react-markdown';
@@ -20,6 +20,9 @@ interface ChatTabProps {
   chatEndRef: React.RefObject<HTMLDivElement | null>;
   handleSendMessage: () => void;
   chatPrompts: string[];
+  crisisSurfaceShown: boolean;
+  setCrisisSurfaceShown: (v: boolean) => void;
+  setActiveTab: (tab: 'home' | 'mood' | 'memory' | 'chat' | 'help') => void;
 }
 
 export default React.memo(function ChatTab({
@@ -28,6 +31,8 @@ export default React.memo(function ChatTab({
   chatError, setChatError,
   chatEndRef, handleSendMessage,
   chatPrompts,
+  crisisSurfaceShown, setCrisisSurfaceShown,
+  setActiveTab,
 }: ChatTabProps) {
   const { isListening, isSupported, startListening, stopListening } = useVoiceInput({
     onTranscript: (text) => setInputMessage(text),
@@ -38,9 +43,13 @@ export default React.memo(function ChatTab({
     <motion.div key="chat" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col" style={{ height: 'calc(100dvh - 180px)' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand-rose/20 rounded-full flex items-center justify-center text-brand-rose">
+          <motion.div
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-10 h-10 bg-brand-rose/20 rounded-full flex items-center justify-center text-brand-rose"
+          >
             <Sparkles className="w-5 h-5" />
-          </div>
+          </motion.div>
           <div>
             <h2 className="text-lg font-medium">{t('ashaDidi')}</h2>
             <p className="text-[10px] text-brand-sage">{t('ashaSaheli')}</p>
@@ -55,6 +64,41 @@ export default React.memo(function ChatTab({
           </button>
         )}
       </div>
+
+      {/* Crisis surface — prominent, always-visible when triggered */}
+      {crisisSurfaceShown && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 bg-brand-rose text-white rounded-2xl p-4 shadow-md"
+        >
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-start gap-2 flex-1">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm mb-1">You deserve support right now</p>
+                <p className="text-xs text-white/90 leading-relaxed">
+                  Please reach out. The helplines are free, confidential, and will not judge you.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setCrisisSurfaceShown(false)}
+              className="p-1.5 rounded-full hover:bg-white/10 min-w-[36px] min-h-[36px] flex items-center justify-center shrink-0"
+              aria-label="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <button
+            onClick={() => setActiveTab('help')}
+            className="w-full py-2.5 bg-white text-brand-rose rounded-2xl text-sm font-medium flex items-center justify-center gap-2 min-h-[44px] press-effect"
+          >
+            <Phone className="w-4 h-4" />
+            View Emergency Helplines
+          </button>
+        </motion.div>
+      )}
 
       <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
         {chatHistory.length === 0 && (

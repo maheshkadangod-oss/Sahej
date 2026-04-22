@@ -86,7 +86,14 @@ export default function HomeTab({
   const [reflectOpen, setReflectOpen] = useState(false);
 
   return (
-    <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+    <motion.div
+      key="home"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="space-y-6"
+    >
 
       {/* 3AM Mode — shown first if late night */}
       {data.isLateNight && (
@@ -129,8 +136,9 @@ export default function HomeTab({
             <motion.button
               key={level}
               onClick={() => startMoodLog(level)}
-              whileTap={{ scale: 0.85 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+              whileHover={{ scale: 1.06, y: -2 }}
+              whileTap={{ scale: 0.88 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               aria-label={moodLabel(level)}
               className="flex-1 aspect-square rounded-2xl flex items-center justify-center text-2xl hover:bg-brand-clay/10 active:bg-brand-clay/20 transition-colors border border-brand-clay/10 min-w-[44px] min-h-[44px]"
             >

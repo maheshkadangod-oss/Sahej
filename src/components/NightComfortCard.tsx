@@ -16,9 +16,13 @@ export default function NightComfortCard({ onTalkToAsha, displayName = 'mama' }:
       className="bg-brand-ink/95 text-brand-cream rounded-3xl p-6 shadow-lg"
     >
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 bg-brand-gold/20 rounded-full flex items-center justify-center shrink-0">
+        <motion.div
+          animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.08, 1] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-10 h-10 bg-brand-gold/20 rounded-full flex items-center justify-center shrink-0"
+        >
           <Moon className="w-5 h-5 text-brand-gold" />
-        </div>
+        </motion.div>
         <div className="flex-1">
           <h3 className="text-lg font-medium mb-1">{t('nightComfortTitle')}</h3>
           <p className="text-sm text-brand-cream/80 leading-relaxed">

@@ -1,11 +1,13 @@
-import React from 'react';
-import { Shield, Phone, ExternalLink, ChevronDown, ChevronUp, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, Phone, ExternalLink, ChevronDown, ChevronUp, Heart, AlertTriangle, Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/cn';
 import { t } from '../strings';
 import { helplineData } from '../data/helplines';
 import { milestones, parentingTips, resourceLinks } from '../data/resources';
 import { partnerSections } from '../data/partnerContent';
+import { redFlags, redFlagsIntro, emergencyRefLines } from '../data/redFlags';
+import { doctorSays, doctorSaysIntro, doctorSaysCategories } from '../data/doctorSays';
 import type { ResourceSubTab } from '../types';
 
 interface HelpTabProps {
@@ -33,6 +35,8 @@ export default React.memo(function HelpTab({
       <div className="pill-nav">
         {([
           { id: 'helplines' as ResourceSubTab, label: t('helplines') },
+          { id: 'redflags' as ResourceSubTab, label: 'Red Flags' },
+          { id: 'doctorsays' as ResourceSubTab, label: 'Doctor Says' },
           { id: 'growth' as ResourceSubTab, label: t('babyGrowth') },
           { id: 'tips' as ResourceSubTab, label: t('tips') },
           { id: 'resources' as ResourceSubTab, label: t('resources') },
@@ -260,6 +264,199 @@ export default React.memo(function HelpTab({
           ))}
         </div>
       )}
+
+      {/* Red Flags — "When to call your doctor" */}
+      {resourceSubTab === 'redflags' && (
+        <RedFlagsSection />
+      )}
+
+      {/* Doctor Says — curated postpartum anxieties */}
+      {resourceSubTab === 'doctorsays' && (
+        <DoctorSaysSection />
+      )}
     </motion.div>
   );
 });
+
+// ---- Red Flags ----
+function RedFlagsSection() {
+  const urgent = redFlags.filter(f => f.severity === 'now');
+  const today = redFlags.filter(f => f.severity === 'today');
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-4"
+    >
+      <div className="bg-brand-rose/10 border border-brand-rose/30 rounded-2xl p-5">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-brand-rose shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-base font-medium mb-1">When to call your doctor</h3>
+            <p className="text-xs text-brand-ink/70 leading-relaxed italic">{redFlagsIntro}</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs uppercase tracking-wide text-brand-rose font-medium mb-2 px-1">Call now / go to ER</p>
+        <div className="space-y-2">
+          {urgent.map((f, i) => (
+            <motion.div
+              key={f.id}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.04 * i }}
+              className="bg-brand-rose/5 border border-brand-rose/20 rounded-2xl p-4"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-xl shrink-0">{f.emoji}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{f.title}</p>
+                  <p className="text-xs text-brand-ink/70 leading-relaxed mt-1">{f.detail}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs uppercase tracking-wide text-brand-gold font-medium mb-2 px-1">Contact your doctor today</p>
+        <div className="space-y-2">
+          {today.map((f, i) => (
+            <motion.div
+              key={f.id}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.04 * i }}
+              className="bg-brand-gold/10 border border-brand-gold/20 rounded-2xl p-4"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-xl shrink-0">{f.emoji}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{f.title}</p>
+                  <p className="text-xs text-brand-ink/70 leading-relaxed mt-1">{f.detail}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-4 border border-brand-clay/15">
+        <p className="text-xs font-medium text-brand-sage mb-2">Quick numbers</p>
+        <div className="space-y-1.5">
+          {emergencyRefLines.map((line, i) => (
+            <div key={i} className="flex items-center justify-between text-xs">
+              <span className="text-brand-ink/80"><b>{line.country}</b> · {line.label}</span>
+              <a href={`tel:${line.number}`} className="text-brand-clay font-medium underline">{line.number}</a>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-[11px] text-brand-sage italic text-center pb-2">
+        When in doubt — call. A doctor would rather hear from you unnecessarily than not at all.
+      </p>
+    </motion.div>
+  );
+}
+
+// ---- Doctor Says ----
+function DoctorSaysSection() {
+  const [category, setCategory] = useState<typeof doctorSaysCategories[number]['key']>('baby-sleep');
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const items = doctorSays.filter(q => q.category === category);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-4"
+    >
+      <div className="bg-brand-sage/10 border border-brand-sage/20 rounded-2xl p-5">
+        <div className="flex items-start gap-3">
+          <Stethoscope className="w-5 h-5 text-brand-sage shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-base font-medium mb-1">Doctor Says</h3>
+            <p className="text-xs text-brand-ink/70 leading-relaxed italic">{doctorSaysIntro}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Category pills */}
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 custom-scrollbar">
+        {doctorSaysCategories.map(cat => (
+          <button
+            key={cat.key}
+            onClick={() => { setCategory(cat.key); setExpanded(null); }}
+            className={cn(
+              "shrink-0 px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors min-h-[40px] flex items-center gap-1.5",
+              category === cat.key
+                ? "bg-brand-sage text-white"
+                : "bg-white/60 dark:bg-white/5 text-brand-ink/70 dark:text-brand-cream/70 border border-brand-sage/20"
+            )}
+          >
+            <span>{cat.emoji}</span>
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Q&A cards */}
+      <div className="space-y-2">
+        <AnimatePresence mode="popLayout">
+          {items.map((q, i) => {
+            const isOpen = expanded === q.id;
+            return (
+              <motion.div
+                key={q.id}
+                layout
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.04 * i }}
+                className="bg-white/50 dark:bg-white/5 border border-brand-clay/15 rounded-2xl overflow-hidden"
+              >
+                <button
+                  onClick={() => setExpanded(isOpen ? null : q.id)}
+                  className="w-full p-4 text-left flex items-start justify-between gap-3 min-h-[56px]"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-brand-ink dark:text-brand-cream leading-snug">{q.question}</p>
+                    {!isOpen && (
+                      <p className="text-[11px] text-brand-sage italic mt-1 leading-snug">{q.summary}</p>
+                    )}
+                  </div>
+                  {isOpen ? <ChevronUp className="w-4 h-4 text-brand-sage shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-brand-sage shrink-0 mt-1" />}
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="px-4 pb-4 space-y-2 overflow-hidden"
+                    >
+                      <p className="text-sm text-brand-ink/80 dark:text-brand-cream/80 leading-relaxed">{q.body}</p>
+                      {q.whenToWorry && (
+                        <div className="bg-brand-rose/10 border border-brand-rose/20 rounded-xl p-3 mt-2">
+                          <p className="text-[11px] text-brand-rose font-medium mb-1">When to worry</p>
+                          <p className="text-xs text-brand-ink/80 dark:text-brand-cream/80 leading-relaxed">{q.whenToWorry}</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+
+      <p className="text-[11px] text-brand-sage italic text-center pb-2">
+        Every baby, every body is different. When in doubt, your doctor is the answer — not Google.
+      </p>
+    </motion.div>
+  );
+}

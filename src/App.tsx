@@ -33,6 +33,7 @@ const ResetActivityModal = React.lazy(() => import('./components/ResetActivityMo
 const FeedbackForm = React.lazy(() => import('./components/FeedbackForm'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 const ShareView = React.lazy(() => import('./components/ShareView'));
+const EPDSScreening = React.lazy(() => import('./components/EPDSScreening'));
 
 function LoadingFallback() {
   return (
@@ -60,6 +61,7 @@ function MainApp() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [showFeedback, setShowFeedback] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showEPDS, setShowEPDS] = useState(false);
   const data = useAppData();
   const resetActivity = useResetActivity();
   const breathing = useBreathing();
@@ -240,6 +242,7 @@ function MainApp() {
                   moodTrend={data.moodTrend}
                   darkMode={data.darkMode}
                   moodLabel={data.moodLabel}
+                  onStartEPDS={() => setShowEPDS(true)}
                 />
               </Suspense>
             )}
@@ -272,6 +275,9 @@ function MainApp() {
                   chatEndRef={data.chatEndRef}
                   handleSendMessage={data.handleSendMessage}
                   chatPrompts={data.chatPrompts}
+                  crisisSurfaceShown={data.crisisSurfaceShown}
+                  setCrisisSurfaceShown={data.setCrisisSurfaceShown}
+                  setActiveTab={setActiveTab}
                 />
               </Suspense>
             )}
@@ -338,6 +344,7 @@ function MainApp() {
           onShowFeedback={() => setShowFeedback(true)}
           onShowAdmin={() => setShowAdmin(true)}
           onShareWithFamily={handleShareWithFamily}
+          onStartEPDS={() => setShowEPDS(true)}
         />
       </Suspense>
 
@@ -355,6 +362,15 @@ function MainApp() {
         <AdminDashboard
           show={showAdmin}
           onClose={() => setShowAdmin(false)}
+        />
+      </Suspense>
+
+      {/* EPDS Screening */}
+      <Suspense fallback={null}>
+        <EPDSScreening
+          show={showEPDS}
+          onClose={() => setShowEPDS(false)}
+          onViewHelplines={() => { setShowEPDS(false); setActiveTab('help'); }}
         />
       </Suspense>
 

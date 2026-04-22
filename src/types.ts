@@ -75,7 +75,7 @@ export interface BabysLast {
 }
 
 export type Tab = 'home' | 'mood' | 'memory' | 'chat' | 'help';
-export type ResourceSubTab = 'helplines' | 'growth' | 'tips' | 'resources' | 'partner';
+export type ResourceSubTab = 'helplines' | 'growth' | 'tips' | 'resources' | 'partner' | 'redflags' | 'doctorsays';
 
 // Nutrition
 export interface NutritionProfile {

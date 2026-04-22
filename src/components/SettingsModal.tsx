@@ -29,6 +29,7 @@ interface SettingsModalProps {
   onShowFeedback: () => void;
   onShowAdmin: () => void;
   onShareWithFamily: () => void;
+  onStartEPDS: () => void;
 }
 
 export default function SettingsModal({
@@ -42,7 +43,7 @@ export default function SettingsModal({
   handleImportData,
   handleResetApp,
   trustedContacts, addTrustedContact, removeTrustedContact,
-  onShowFeedback, onShowAdmin, onShareWithFamily,
+  onShowFeedback, onShowAdmin, onShareWithFamily, onStartEPDS,
 }: SettingsModalProps) {
   const importFileRef = useRef<HTMLInputElement>(null);
   const [showAddContact, setShowAddContact] = useState(false);
@@ -301,6 +302,15 @@ export default function SettingsModal({
               </div>
 
               <div className="border-t border-brand-clay/10" />
+
+              {/* Emotional check-in (EPDS) */}
+              <button
+                onClick={() => { setShowSettings(false); onStartEPDS(); }}
+                className="w-full py-3 bg-brand-sage/15 text-brand-ink rounded-2xl text-sm font-medium press-effect min-h-[44px]"
+              >
+                💛 Emotional Check-in
+                <span className="block text-[10px] text-brand-sage font-normal mt-0.5">10 questions used by doctors worldwide · 2 minutes</span>
+              </button>
 
               {/* Share with family */}
               <button
