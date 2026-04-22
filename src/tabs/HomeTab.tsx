@@ -4,7 +4,7 @@ import {
   Sun, Heart, GlassWater, PenLine, Minus, Phone,
   RefreshCw, ChevronDown, ChevronUp,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { format } from 'date-fns';
 import { cn } from '../lib/cn';
 import { t } from '../strings';
@@ -17,6 +17,12 @@ import CompanionWidget from '../components/CompanionWidget';
 import ReassuranceCard from '../components/ReassuranceCard';
 import NightComfortCard from '../components/NightComfortCard';
 import QuickStateActions from '../components/QuickStateActions';
+
+// Stagger child variant — each section fades + slides in sequentially
+const sectionVariant: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
+};
 
 // The resetActivities config
 const resetActivities = [
@@ -88,10 +94,16 @@ export default function HomeTab({
   return (
     <motion.div
       key="home"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial="hidden"
+      animate="visible"
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: { staggerChildren: 0.06, delayChildren: 0.05 },
+        },
+      }}
       className="space-y-6"
     >
 
@@ -106,7 +118,7 @@ export default function HomeTab({
       {/* ====== ZONE 1: CORE (always visible) ====== */}
 
       {/* Greeting */}
-      <section className="px-1">
+      <motion.section variants={sectionVariant} className="px-1">
         <h2 className="text-xl font-serif font-medium text-brand-ink mb-1">
           {(t('helloName') as string).replace('{name}', displayName)}
         </h2>
@@ -118,17 +130,23 @@ export default function HomeTab({
         <div className="bg-brand-rose/10 border border-brand-rose/20 rounded-2xl p-4 italic text-brand-ink/80 text-sm text-center">
           "{dailyAffirmation}"
         </div>
-      </section>
+      </motion.section>
 
       {/* CORE 1: Mood Logger */}
-      <section className="glass-card rounded-3xl p-6 mt-4">
+      <motion.section variants={sectionVariant} className="glass-card rounded-3xl p-6 mt-4">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="w-5 h-5 text-brand-clay" />
           <h2 className="text-xl font-medium">{t('howAreYou')}</h2>
           {moodStreak > 1 && (
-            <span className="text-xs text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full ml-auto">
+            <motion.span
+              key={moodStreak}
+              initial={{ scale: 0.6, opacity: 0, rotate: -6 }}
+              animate={{ scale: 1, opacity: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 14 }}
+              className="text-xs text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full ml-auto inline-block"
+            >
               {moodStreak} {t('dayStreak')}
-            </span>
+            </motion.span>
           )}
         </div>
         <div className="flex justify-between items-center gap-2">
@@ -147,34 +165,46 @@ export default function HomeTab({
           ))}
         </div>
         <p className="text-center text-xs text-brand-sage mt-4 italic">{t('logHeart')}</p>
-      </section>
+      </motion.section>
 
       {/* CORE 2: Talk to Asha CTA */}
-      <button
+      <motion.button
+        variants={sectionVariant}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
         onClick={() => setActiveTab('chat')}
         className="w-full py-4 bg-brand-clay text-white rounded-3xl text-base font-medium press-effect min-h-[56px] flex items-center justify-center gap-2 shadow-sm"
       >
         <span className="text-xl">💬</span>
         Talk to Asha
-      </button>
+      </motion.button>
 
       {/* CORE 3: Emergency Help — prominent, always visible */}
-      <button
+      <motion.button
+        variants={sectionVariant}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
         onClick={() => setActiveTab('help')}
         className="w-full py-4 bg-brand-rose text-white rounded-2xl text-base font-medium flex items-center justify-center gap-2.5 min-h-[56px] shadow-md press-effect"
       >
         <Phone className="w-5 h-5" />
         Emergency Helplines
-      </button>
+      </motion.button>
 
       {/* Quick State Actions — tap how you feel, get an immediate micro-activity */}
-      <QuickStateActions dayOfYear={data.dayOfYear} />
+      <motion.div variants={sectionVariant}>
+        <QuickStateActions dayOfYear={data.dayOfYear} />
+      </motion.div>
 
       {/* Daily Reassurance — single rotating card */}
-      <ReassuranceCard dayOfYear={data.dayOfYear} />
+      <motion.div variants={sectionVariant}>
+        <ReassuranceCard dayOfYear={data.dayOfYear} />
+      </motion.div>
 
       {/* Companion — below core CTAs */}
-      <CompanionWidget {...companion} setActiveTab={setActiveTab} />
+      <motion.div variants={sectionVariant}>
+        <CompanionWidget {...companion} setActiveTab={setActiveTab} />
+      </motion.div>
 
       {/* Mood Insights (AI) — shown inline when available */}
       {moodInsights.hasEnoughData && (

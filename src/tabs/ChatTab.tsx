@@ -126,7 +126,13 @@ export default React.memo(function ChatTab({
           </div>
         )}
         {chatHistory.map((msg, i) => (
-          <div key={i} className={cn("flex flex-col gap-1 mb-2", msg.role === 'user' ? "items-end" : "items-start")}>
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+            className={cn("flex flex-col gap-1 mb-2", msg.role === 'user' ? "items-end" : "items-start")}
+          >
             <div className={cn(
               "max-w-[85%] p-4 rounded-3xl text-sm transition-all shadow-sm",
               msg.role === 'user'
@@ -140,16 +146,21 @@ export default React.memo(function ChatTab({
             <span className="text-[9px] text-brand-sage/60 px-2">
               {format(msg.timestamp, 'h:mm a')}
             </span>
-          </div>
+          </motion.div>
         ))}
         {isTyping && (
-          <div className="flex flex-col items-start gap-1">
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+            className="flex flex-col items-start gap-1"
+          >
             <div className="glass-card border border-brand-rose/10 p-4 rounded-3xl rounded-tl-none w-16 flex gap-1 items-center justify-center shadow-sm">
-              <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity }} className="w-1.5 h-1.5 bg-brand-rose/40 rounded-full" />
-              <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-brand-rose/40 rounded-full" />
-              <motion.div animate={{ y: [0, -4, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-brand-rose/40 rounded-full" />
+              <motion.div animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }} transition={{ duration: 0.9, repeat: Infinity }} className="w-1.5 h-1.5 bg-brand-rose rounded-full" />
+              <motion.div animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }} transition={{ duration: 0.9, repeat: Infinity, delay: 0.18 }} className="w-1.5 h-1.5 bg-brand-rose rounded-full" />
+              <motion.div animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }} transition={{ duration: 0.9, repeat: Infinity, delay: 0.36 }} className="w-1.5 h-1.5 bg-brand-rose rounded-full" />
             </div>
-          </div>
+          </motion.div>
         )}
         {chatError && (
           <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 rounded-2xl">

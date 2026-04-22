@@ -18,21 +18,29 @@ function NavButton({ active, onClick, icon: Icon, label, badge }: {
       aria-label={label}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        "flex flex-col items-center gap-1 transition-all min-w-[48px] min-h-[48px] py-1 press-effect relative",
-        active ? "text-brand-clay scale-110" : "text-brand-sage opacity-60"
+        "flex flex-col items-center gap-1 transition-colors min-w-[48px] min-h-[48px] py-1 press-effect relative",
+        active ? "text-brand-clay" : "text-brand-sage opacity-60"
       )}
     >
-      <div className="relative">
+      <motion.div
+        className="relative"
+        animate={{ scale: active ? 1.15 : 1, y: active ? -1 : 0 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+      >
         <Icon className="w-5 h-5" />
         {badge !== undefined && badge > 0 && (
           <span className="absolute -top-1.5 -right-2.5 bg-brand-rose text-white text-[7px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5" aria-label={`${badge} items`}>
             {badge > 99 ? '99+' : badge}
           </span>
         )}
-      </div>
+      </motion.div>
       <span className="text-[9px] font-medium">{label}</span>
       {active && (
-        <motion.div layoutId="nav-dot" className="w-1 h-1 bg-brand-clay rounded-full" />
+        <motion.div
+          layoutId="nav-dot"
+          className="w-1 h-1 bg-brand-clay rounded-full"
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        />
       )}
     </button>
   );

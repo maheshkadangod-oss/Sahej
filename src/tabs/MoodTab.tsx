@@ -46,32 +46,42 @@ export default React.memo(function MoodTab({
 
       {/* Weekly Summary */}
       {weekMoods.length > 0 && (
-        <div className="glass-card rounded-2xl p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.4 }}
+          className="glass-card rounded-2xl p-4"
+        >
           <h3 className="text-sm font-medium text-brand-sage mb-3">{t('weeklyMoodSummary')}</h3>
           <div className="grid grid-cols-3 gap-3">
-            <div className="text-center">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.25 }} className="text-center">
               <div className="text-2xl font-serif font-semibold text-brand-clay">{avgMood}</div>
               <div className="text-[10px] text-brand-sage uppercase">{t('avgMood')}</div>
-            </div>
-            <div className="text-center">
+            </motion.div>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.32 }} className="text-center">
               <div className="text-2xl font-serif font-semibold text-brand-ink">{weekMoods.length}</div>
               <div className="text-[10px] text-brand-sage uppercase">{t('totalEntries')}</div>
-            </div>
-            <div className="text-center">
+            </motion.div>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.39 }} className="text-center">
               <div className="text-2xl font-serif font-semibold">
                 {moodTrend === 'up' ? '📈' : moodTrend === 'down' ? '📉' : '📊'}
               </div>
               <div className="text-[10px] text-brand-sage uppercase">
                 {moodTrend === 'up' ? t('trendUp') : moodTrend === 'down' ? t('trendDown') : t('trendStable')}
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Chart */}
       {moods.length > 1 && (
-        <div className="glass-card rounded-3xl p-4 h-64">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.45 }}
+          className="glass-card rounded-3xl p-4 h-64"
+        >
           <h3 className="text-sm font-medium mb-4 text-brand-sage">{t('fluctuations')}</h3>
           <ResponsiveContainer width="100%" height="80%">
             <LineChart data={chartData}>
@@ -79,10 +89,10 @@ export default React.memo(function MoodTab({
               <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#7D8C7C' }} dy={10} />
               <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#7D8C7C' }} />
               <Tooltip contentStyle={{ backgroundColor: darkMode ? '#2D312E' : '#FDF8F4', borderRadius: '12px', border: '1px solid #C8956C', fontSize: '12px', color: darkMode ? '#E8E5E0' : '#2D312E' }} />
-              <Line type="monotone" dataKey="level" stroke="#C8956C" strokeWidth={3} dot={{ r: 4, fill: '#C8956C', strokeWidth: 2, stroke: darkMode ? '#2D312E' : '#FDF8F4' }} activeDot={{ r: 6 }} />
+              <Line type="monotone" dataKey="level" stroke="#C8956C" strokeWidth={3} dot={{ r: 4, fill: '#C8956C', strokeWidth: 2, stroke: darkMode ? '#2D312E' : '#FDF8F4' }} activeDot={{ r: 6 }} animationDuration={1200} animationEasing="ease-out" />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </motion.div>
       )}
 
       {/* Mood entries */}

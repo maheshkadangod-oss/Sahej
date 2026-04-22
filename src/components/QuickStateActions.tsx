@@ -152,18 +152,33 @@ export default function QuickStateActions({ dayOfYear }: QuickStateActionsProps)
         <p className="text-[11px] text-brand-sage italic">{t('feelingStuckSub')}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <motion.div
+        className="grid grid-cols-2 gap-2"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.04 } },
+        }}
+      >
         {stateActions.map(s => (
-          <button
+          <motion.button
             key={s.id}
+            variants={{
+              hidden: { opacity: 0, scale: 0.95, y: 6 },
+              visible: { opacity: 1, scale: 1, y: 0 },
+            }}
+            whileHover={{ scale: 1.03, y: -1 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 20 }}
             onClick={() => setActive(s)}
             className="flex items-center gap-2 px-3 py-3 bg-white/60 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 border border-brand-clay/15 rounded-2xl text-left text-[13px] text-brand-ink dark:text-brand-cream min-h-[48px] press-effect"
           >
             <span className="text-lg shrink-0">{s.emoji}</span>
             <span className="flex-1 leading-tight">{s.label}</span>
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
 
       <AnimatePresence>
         {active && (
