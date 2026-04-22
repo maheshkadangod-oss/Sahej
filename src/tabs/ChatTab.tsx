@@ -44,8 +44,8 @@ export default React.memo(function ChatTab({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+            animate={{ scale: [1, 1.04, 1] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             className="w-10 h-10 bg-brand-rose/20 rounded-full flex items-center justify-center text-brand-rose"
           >
             <Sparkles className="w-5 h-5" />

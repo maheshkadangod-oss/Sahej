@@ -17,7 +17,7 @@ export default function NightComfortCard({ onTalkToAsha, displayName = 'mama' }:
     >
       <div className="flex items-start gap-3 mb-4">
         <motion.div
-          animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.08, 1] }}
+          animate={{ opacity: [0.7, 1, 0.7] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
           className="w-10 h-10 bg-brand-gold/20 rounded-full flex items-center justify-center shrink-0"
         >

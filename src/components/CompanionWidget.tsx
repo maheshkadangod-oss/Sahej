@@ -91,25 +91,16 @@ export default function CompanionWidget(props: CompanionWidgetProps) {
   return (
     <section className="glass-card rounded-3xl p-6 space-y-4">
       <div className="flex items-start gap-4">
-        {/* Companion emoji with floating + gentle breathing animation */}
+        {/* Companion emoji with gentle floating animation */}
         <motion.button
-          animate={{ y: [0, -6, 0], scale: [1, 1.04, 1] }}
-          transition={{
-            y: { repeat: Infinity, duration: 3, ease: 'easeInOut' },
-            scale: { repeat: Infinity, duration: 4.5, ease: 'easeInOut' },
-          }}
+          animate={{ y: [0, -5, 0] }}
+          transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
           whileTap={{ scale: 1.3, rotate: [0, -8, 8, 0] }}
           onClick={tapCompanion}
-          className="text-5xl select-none min-w-[56px] min-h-[56px] flex items-center justify-center relative"
+          className="text-5xl select-none min-w-[56px] min-h-[56px] flex items-center justify-center"
           aria-label={t('companionTap')}
         >
-          <motion.span
-            className="absolute inset-0 rounded-full bg-brand-gold/20 blur-md"
-            animate={{ opacity: [0.3, 0.6, 0.3], scale: [0.8, 1.05, 0.8] }}
-            transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
-            aria-hidden
-          />
-          <span className="relative z-10">{currentEmoji}</span>
+          {currentEmoji}
         </motion.button>
 
         <div className="flex-1 min-w-0">
