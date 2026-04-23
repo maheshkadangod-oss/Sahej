@@ -277,6 +277,8 @@ function MainApp() {
                   chatPrompts={data.chatPrompts}
                   crisisSurfaceShown={data.crisisSurfaceShown}
                   setCrisisSurfaceShown={data.setCrisisSurfaceShown}
+                  fallbackModeShown={data.fallbackModeShown}
+                  setFallbackModeShown={data.setFallbackModeShown}
                   setActiveTab={setActiveTab}
                 />
               </Suspense>

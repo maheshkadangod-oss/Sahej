@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../lib/cn';
 import { stateActions, relatableQuotes, type StateAction } from '../data/stateActions';
 import { t } from '../strings';
 
@@ -56,35 +57,107 @@ function EyesClosedCountdown({ durationSec = 30 }: { durationSec?: number }) {
 
 function Grounding() {
   const steps = [
-    { sense: '👀 See', prompt: 'Name one thing you can see right now.' },
-    { sense: '👂 Hear', prompt: 'Name one thing you can hear.' },
-    { sense: '✋ Feel', prompt: 'Name one thing you can feel — your skin, the chair, your breath.' },
+    { sense: '👀', label: 'See', prompt: 'Name one thing you can see right now.', placeholder: 'e.g. the lamp, baby\'s hand, a shadow…' },
+    { sense: '👂', label: 'Hear', prompt: 'Name one thing you can hear.', placeholder: 'e.g. a fan, breathing, traffic…' },
+    { sense: '✋', label: 'Feel', prompt: 'Name one thing you can feel — skin, chair, breath.', placeholder: 'e.g. warmth, the blanket, my heartbeat…' },
   ];
   const [i, setI] = useState(0);
+  const [entries, setEntries] = useState<string[]>(['', '', '']);
+  const [done, setDone] = useState(false);
+
+  const currentEntry = entries[i] || '';
+  const canProceed = currentEntry.trim().length > 0;
+
+  const updateEntry = (v: string) => {
+    const next = [...entries];
+    next[i] = v;
+    setEntries(next);
+  };
+
+  const advance = () => {
+    if (!canProceed) return;
+    if (i < steps.length - 1) {
+      setI(i + 1);
+    } else {
+      setDone(true);
+    }
+  };
+
+  if (done) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="py-6 px-4 text-center space-y-3"
+      >
+        <p className="text-3xl">🌿</p>
+        <p className="text-base text-brand-ink/85 dark:text-brand-cream/85 leading-relaxed">
+          You named what's around you. Your senses are here. You are here.
+        </p>
+        <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-4 space-y-1.5 text-sm text-brand-ink/75 dark:text-brand-cream/75 text-left">
+          {steps.map((s, idx) => (
+            <div key={idx} className="flex items-start gap-2">
+              <span className="text-base">{s.sense}</span>
+              <span className="flex-1 italic">"{entries[idx]}"</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-brand-sage italic">That's grounding. That's enough.</p>
+      </motion.div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center py-6 px-4 min-h-[220px]">
+    <div className="flex flex-col py-6 px-2 min-h-[240px]">
       <AnimatePresence mode="wait">
         <motion.div
           key={i}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          className="text-center"
+          className="flex-1"
         >
-          <p className="text-3xl mb-3">{steps[i].sense}</p>
-          <p className="text-base text-brand-ink/80 dark:text-brand-cream/80 leading-relaxed mb-6">{steps[i].prompt}</p>
+          <div className="text-center mb-4">
+            <p className="text-4xl mb-2">{steps[i].sense}</p>
+            <p className="text-xs uppercase tracking-wide text-brand-sage font-medium">{steps[i].label}</p>
+          </div>
+          <p className="text-base text-brand-ink/85 dark:text-brand-cream/85 leading-relaxed text-center mb-4">
+            {steps[i].prompt}
+          </p>
+          <input
+            type="text"
+            value={currentEntry}
+            onChange={(e) => updateEntry(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && canProceed) advance(); }}
+            placeholder={steps[i].placeholder}
+            autoFocus
+            maxLength={60}
+            enterKeyHint={i < steps.length - 1 ? 'next' : 'done'}
+            className="w-full bg-white/60 dark:bg-white/5 border border-brand-clay/20 rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-brand-rose/30 text-base text-center"
+          />
+
+          {/* Progress dots */}
+          <div className="flex items-center justify-center gap-1.5 mt-4">
+            {steps.map((_, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  'h-1.5 rounded-full transition-all',
+                  idx === i ? 'w-6 bg-brand-rose' : idx < i ? 'w-1.5 bg-brand-rose/50' : 'w-1.5 bg-brand-sage/25'
+                )}
+              />
+            ))}
+          </div>
         </motion.div>
       </AnimatePresence>
-      {i < steps.length - 1 ? (
-        <button
-          onClick={() => setI(i + 1)}
-          className="px-6 py-2.5 bg-brand-rose/15 text-brand-rose rounded-full text-sm font-medium min-h-[44px]"
-        >
-          Next
-        </button>
-      ) : (
-        <p className="text-sm text-brand-sage italic mt-2">You're here. That's enough.</p>
-      )}
+
+      <button
+        onClick={advance}
+        disabled={!canProceed}
+        className="mt-4 w-full py-3 bg-brand-rose text-white rounded-full text-sm font-medium min-h-[48px] disabled:opacity-40 disabled:cursor-not-allowed press-effect transition-opacity"
+      >
+        {i < steps.length - 1 ? 'Next' : 'Done'}
+      </button>
     </div>
   );
 }

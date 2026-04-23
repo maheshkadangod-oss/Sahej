@@ -106,6 +106,7 @@ export function useAppData() {
   const [inputMessage, setInputMessage] = useState('');
   const [chatError, setChatError] = useState('');
   const [crisisSurfaceShown, setCrisisSurfaceShown] = useState(false);
+  const [fallbackModeShown, setFallbackModeShown] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
 
@@ -419,10 +420,15 @@ export function useAppData() {
       const response = await getGeminiResponse(inputMessage, apiHistory);
       if (response) {
         setChatHistory(prev => [...prev, { role: 'model', parts: [{ text: response }], timestamp: Date.now() }]);
+        setFallbackModeShown(false); // clear if a real response came through
+      } else {
+        // Graceful offline fallback
+        setFallbackModeShown(true);
       }
     } catch (error) {
       console.error("Chat error:", error);
-      setChatError(t('chatError'));
+      // Network / proxy / rate-limit error — offer pre-written supportive menu
+      setFallbackModeShown(true);
     } finally {
       setIsTyping(false);
     }
@@ -581,6 +587,7 @@ export function useAppData() {
     inputMessage, setInputMessage,
     chatError, setChatError,
     crisisSurfaceShown, setCrisisSurfaceShown,
+    fallbackModeShown, setFallbackModeShown,
     chatEndRef, mainRef,
     showMoodNote, setShowMoodNote,
     pendingMoodLevel, setPendingMoodLevel,

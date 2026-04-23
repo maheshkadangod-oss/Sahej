@@ -7,6 +7,7 @@ import { cn } from '../lib/cn';
 import { t } from '../strings';
 import { hasApiKey } from '../services/gemini';
 import { useVoiceInput } from '../hooks/useVoiceInput';
+import { fallbackOptions, fallbackIntro } from '../data/fallbackResponses';
 import type { ChatMessage } from '../types';
 
 interface ChatTabProps {
@@ -22,6 +23,8 @@ interface ChatTabProps {
   chatPrompts: string[];
   crisisSurfaceShown: boolean;
   setCrisisSurfaceShown: (v: boolean) => void;
+  fallbackModeShown: boolean;
+  setFallbackModeShown: (v: boolean) => void;
   setActiveTab: (tab: 'home' | 'mood' | 'memory' | 'chat' | 'help') => void;
 }
 
@@ -32,6 +35,7 @@ export default React.memo(function ChatTab({
   chatEndRef, handleSendMessage,
   chatPrompts,
   crisisSurfaceShown, setCrisisSurfaceShown,
+  fallbackModeShown, setFallbackModeShown,
   setActiveTab,
 }: ChatTabProps) {
   const { isListening, isSupported, startListening, stopListening } = useVoiceInput({
@@ -167,6 +171,33 @@ export default React.memo(function ChatTab({
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <p className="text-xs text-red-600 dark:text-red-300">{chatError}</p>
           </div>
+        )}
+        {fallbackModeShown && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card border border-brand-rose/15 rounded-3xl rounded-tl-none p-4 space-y-3"
+          >
+            <p className="text-xs text-brand-sage italic leading-relaxed">{fallbackIntro}</p>
+            <div className="space-y-2">
+              {fallbackOptions.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    setChatHistory(prev => [
+                      ...prev,
+                      { role: 'user', parts: [{ text: opt.label }], timestamp: Date.now() },
+                      { role: 'model', parts: [{ text: opt.response }], timestamp: Date.now() + 1 },
+                    ]);
+                    setFallbackModeShown(false);
+                  }}
+                  className="w-full text-left px-3 py-2.5 bg-white/60 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 border border-brand-rose/15 rounded-2xl text-xs text-brand-ink dark:text-brand-cream min-h-[44px] press-effect"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
         )}
         <div ref={chatEndRef} />
       </div>
