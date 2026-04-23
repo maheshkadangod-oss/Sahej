@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/cn';
 import { t } from '../strings';
 import { isNotificationSupported } from '../services/notifications';
+import { useOnline } from '../hooks/useOnline';
 import type { TrustedContact } from '../types';
 
 interface SettingsModalProps {
@@ -50,6 +51,7 @@ export default function SettingsModal({
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [versionTaps, setVersionTaps] = useState(0);
+  const online = useOnline();
 
   const handleVersionTap = () => {
     const next = versionTaps + 1;
@@ -324,13 +326,20 @@ export default function SettingsModal({
                 <span className="block text-[10px] text-brand-sage font-normal mt-0.5">Print or save a PDF summary of the last 30 days for your doctor</span>
               </button>
 
-              {/* Share with family */}
+              {/* Share with family — disabled when offline since link creation hits our API.
+                  We keep the button visible (so users learn it exists) but make it clear it needs
+                  a connection; prevents the ugly "Could not create link" toast from firing blindly. */}
               <button
                 onClick={() => { setShowSettings(false); onShareWithFamily(); }}
-                className="w-full py-3 bg-brand-rose/15 text-brand-ink rounded-2xl text-sm font-medium press-effect min-h-[44px]"
+                disabled={!online}
+                className="w-full py-3 bg-brand-rose/15 text-brand-ink rounded-2xl text-sm font-medium press-effect min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 🤝 Share with Family
-                <span className="block text-[10px] text-brand-sage font-normal mt-0.5">Let them see how you've been, without an app install</span>
+                <span className="block text-[10px] text-brand-sage font-normal mt-0.5">
+                  {online
+                    ? "Let them see how you've been, without an app install"
+                    : 'Offline — reconnect to create a share link'}
+                </span>
               </button>
 
               {/* Feedback */}

@@ -385,7 +385,7 @@ export function useAppData() {
     if (!inputMessage.trim()) return;
     setChatError('');
 
-    // Crisis detection — ALWAYS runs, even if no API key.
+    // Crisis detection — ALWAYS runs, even if no API key or offline.
     // We want safety surface regardless of whether Asha can respond.
     const { severity } = detectCrisis(inputMessage);
 
@@ -406,6 +406,22 @@ export function useAppData() {
       setCrisisSurfaceShown(true);
       setChatHistory(prev => [...prev, { role: 'model', parts: [{ text: WATCHFUL_RESPONSE }], timestamp: Date.now() }]);
       logCrisisEvent('watchful');
+      return;
+    }
+
+    // Offline — queue the user message and bail. The drain effect below picks it up when
+    // connectivity returns. We persist the message as `pending: true` so she sees her words
+    // posted to the chat immediately (not lost) with a "will send when online" indicator.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setChatHistory(prev => {
+        const copy = [...prev];
+        // Mark the just-added user msg as pending
+        const lastIdx = copy.length - 1;
+        if (lastIdx >= 0 && copy[lastIdx].role === 'user') {
+          copy[lastIdx] = { ...copy[lastIdx], pending: true };
+        }
+        return copy;
+      });
       return;
     }
 
@@ -433,6 +449,65 @@ export function useAppData() {
       setIsTyping(false);
     }
   }, [inputMessage, chatHistory, setChatHistory]);
+
+  // Offline message drain. When connectivity returns (either via the `online` event, or on
+  // mount if we were already online with stale pendings from a previous session), walk any
+  // `pending` user messages in chat history and call Gemini for each, appending the AI
+  // response. If Gemini fails mid-drain the remaining pendings stay queued for next time.
+  //
+  // A ref mirrors chatHistory so the `online` event handler doesn't need to be re-bound on
+  // every chat update (which would miss events fired between re-renders). A `draining` ref
+  // prevents re-entrant drain calls when a second online event fires while one is in flight.
+  const chatHistoryRef = useRef(chatHistory);
+  useEffect(() => { chatHistoryRef.current = chatHistory; }, [chatHistory]);
+  const drainingRef = useRef(false);
+
+  useEffect(() => {
+    const drain = async () => {
+      if (drainingRef.current) return;
+      if (!navigator.onLine) return;
+      const current = chatHistoryRef.current;
+      const pending = current.filter(m => m.role === 'user' && m.pending);
+      if (pending.length === 0 || !hasApiKey()) return;
+
+      drainingRef.current = true;
+      setIsTyping(true);
+      try {
+        for (const msg of pending) {
+          // Build history up to and including this pending message (based on the live ref
+          // at drain time — picks up any earlier messages added between the queue and now).
+          const live = chatHistoryRef.current;
+          const idx = live.findIndex(m => m.timestamp === msg.timestamp && m.role === 'user');
+          if (idx === -1) continue;
+          const apiHistory = live.slice(0, idx + 1).map(({ role, parts }) => ({ role, parts }));
+          try {
+            const response = await getGeminiResponse(msg.parts[0].text, apiHistory);
+            if (response) {
+              setChatHistory(prev => {
+                const cleared = prev.map(m =>
+                  m.timestamp === msg.timestamp && m.role === 'user' ? { ...m, pending: false } : m,
+                );
+                return [...cleared, { role: 'model', parts: [{ text: response }], timestamp: Date.now() }];
+              });
+            }
+          } catch (err) {
+            console.error('Drain error for message', msg.timestamp, err);
+            break; // Leave remaining as pending; retry on next online event.
+          }
+        }
+      } finally {
+        drainingRef.current = false;
+        setIsTyping(false);
+      }
+    };
+
+    const handleOnline = () => { void drain(); };
+    window.addEventListener('online', handleOnline);
+    // Drain on mount in case we're already online with persisted pendings from last session.
+    if (navigator.onLine) void drain();
+
+    return () => window.removeEventListener('online', handleOnline);
+  }, [setChatHistory]);
 
   const handleSaveApiKey = useCallback(() => {
     saveApiKey(apiKeyInput);

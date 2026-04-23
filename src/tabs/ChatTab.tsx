@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Send, Key, AlertCircle, Mic, MicOff, Phone, X } from 'lucide-react';
+import { Sparkles, Send, Key, AlertCircle, Mic, MicOff, Phone, X, Clock, WifiOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import Markdown from 'react-markdown';
@@ -7,6 +7,7 @@ import { cn } from '../lib/cn';
 import { t } from '../strings';
 import { hasApiKey } from '../services/gemini';
 import { useVoiceInput } from '../hooks/useVoiceInput';
+import { useOnline } from '../hooks/useOnline';
 import { fallbackOptions, fallbackIntro } from '../data/fallbackResponses';
 import ClinicalByline from '../components/ClinicalByline';
 import type { ChatMessage } from '../types';
@@ -43,6 +44,7 @@ export default React.memo(function ChatTab({
     onTranscript: (text) => setInputMessage(text),
   });
   const toggleVoice = () => (isListening ? stopListening() : startListening());
+  const online = useOnline();
 
   return (
     <motion.div key="chat" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col" style={{ height: 'calc(100dvh - 180px)' }}>
@@ -151,8 +153,14 @@ export default React.memo(function ChatTab({
                 <Markdown>{msg.parts[0].text}</Markdown>
               </div>
             </div>
-            <span className="text-[9px] text-brand-sage/60 px-2">
-              {format(msg.timestamp, 'h:mm a')}
+            <span className="text-[9px] text-brand-sage/60 px-2 flex items-center gap-1">
+              {msg.pending && (
+                <span className="flex items-center gap-0.5 text-brand-clay" aria-label="Queued — will send when online">
+                  <Clock className="w-2.5 h-2.5" aria-hidden="true" />
+                  Queued
+                </span>
+              )}
+              {!msg.pending && format(msg.timestamp, 'h:mm a')}
             </span>
           </motion.div>
         ))}
@@ -207,6 +215,12 @@ export default React.memo(function ChatTab({
       </div>
 
       <div className="mt-4 relative">
+        {!online && (
+          <p className="text-[10px] text-brand-sage/80 mb-2 flex items-center gap-1.5 px-2">
+            <WifiOff className="w-3 h-3 shrink-0" aria-hidden="true" />
+            Offline — Asha will reply when you&rsquo;re back.
+          </p>
+        )}
         <input
           type="text"
           value={inputMessage}

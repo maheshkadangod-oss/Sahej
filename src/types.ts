@@ -61,6 +61,12 @@ export interface ChatMessage {
   role: string;
   parts: { text: string }[];
   timestamp: number;
+  /**
+   * Set on user messages that were sent while offline. The message is persisted in chat
+   * history so the user sees her message posted immediately, and a background drain effect
+   * sends it to Asha as soon as connectivity returns. Cleared once the AI response arrives.
+   */
+  pending?: boolean;
 }
 
 export interface ChecklistItem {

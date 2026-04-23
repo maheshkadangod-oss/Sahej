@@ -22,6 +22,7 @@ import WelcomeScreen from './components/WelcomeScreen';
 import BottomNav from './components/BottomNav';
 import Toast from './components/Toast';
 import MoodNoteModal from './components/MoodNoteModal';
+import { OfflineBanner } from './components/OfflineBanner';
 import HomeTab from './tabs/HomeTab';
 
 // Lazy loaded components
@@ -207,6 +208,9 @@ function MainApp() {
     <div className="min-h-screen min-h-[100dvh] flex flex-col max-w-md mx-auto bg-brand-cream relative overflow-hidden">
       {/* Skip link — keyboard-only affordance to bypass the header */}
       <a href="#main-content" className="skip-to-content">Skip to content</a>
+
+      {/* Offline banner — slides in from top when network is lost, reassuring copy */}
+      <OfflineBanner />
 
       <div aria-hidden="true" className="absolute top-[-10%] right-[-10%] w-72 h-72 bg-brand-rose/15 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
       <div aria-hidden="true" className="absolute bottom-[-5%] left-[-5%] w-56 h-56 bg-brand-sage/10 rounded-full blur-3xl pointer-events-none ambient-blob-2" />
