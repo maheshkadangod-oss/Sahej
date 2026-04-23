@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import { Settings } from 'lucide-react';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, MotionConfig } from 'motion/react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useAppData } from './hooks/useAppData';
 import { useResetActivity } from './hooks/useResetActivity';
@@ -14,6 +14,7 @@ import { t } from './strings';
 import { getApiKey } from './services/gemini';
 import { createShareLink } from './services/adminApi';
 import { format } from 'date-fns';
+import { microAchievements } from './data/reassurances';
 import type { Tab } from './types';
 
 // Eagerly loaded components
@@ -34,6 +35,7 @@ const FeedbackForm = React.lazy(() => import('./components/FeedbackForm'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 const ShareView = React.lazy(() => import('./components/ShareView'));
 const EPDSScreening = React.lazy(() => import('./components/EPDSScreening'));
+const PrintableReport = React.lazy(() => import('./components/PrintableReport'));
 
 function LoadingFallback() {
   return (
@@ -49,12 +51,30 @@ export default function App() {
   const shareMatch = typeof window !== 'undefined' ? window.location.pathname.match(/^\/share\/([^/?#]+)/) : null;
   if (shareMatch) {
     return (
+      <MotionConfig reducedMotion="never">
+        <Suspense fallback={<LoadingFallback />}>
+          <ShareView token={shareMatch[1]} />
+        </Suspense>
+      </MotionConfig>
+    );
+  }
+  // Printable OB report route
+  const isPrintRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/report/print');
+  if (isPrintRoute) {
+    return (
       <Suspense fallback={<LoadingFallback />}>
-        <ShareView token={shareMatch[1]} />
+        <PrintableReport />
       </Suspense>
     );
   }
-  return <MainApp />;
+  // reducedMotion="never" — Motion automatically snaps transforms & rotations to their
+  // final state when the OS sets prefers-reduced-motion: reduce. Opacity still fades
+  // (a safe, non-vestibular effect), so content doesn't remain invisible.
+  return (
+    <MotionConfig reducedMotion="never">
+      <MainApp />
+    </MotionConfig>
+  );
 }
 
 function MainApp() {
@@ -150,16 +170,14 @@ function MainApp() {
   useEffect(() => {
     if (data.showWelcome) return;
     if (data.lastMicroAchievement === data.todayStr) return;
-    import('./data/reassurances').then(({ microAchievements }) => {
-      const msg = microAchievements[data.dayOfYear % microAchievements.length];
-      // Small delay so it doesn't collide with mount transitions
-      const t = setTimeout(() => {
-        data.showToast(msg);
-        localStorage.setItem('sahej_last_microachievement', data.todayStr);
-        data.setLastMicroAchievement(data.todayStr);
-      }, 900);
-      return () => clearTimeout(t);
-    });
+    const msg = microAchievements[data.dayOfYear % microAchievements.length];
+    // Small delay so it doesn't collide with mount transitions
+    const t = setTimeout(() => {
+      data.showToast(msg);
+      localStorage.setItem('sahej_last_microachievement', data.todayStr);
+      data.setLastMicroAchievement(data.todayStr);
+    }, 900);
+    return () => clearTimeout(t);
   }, [data.showWelcome, data.lastMicroAchievement, data.todayStr, data.dayOfYear]);
 
   // Tab change scroll
@@ -187,9 +205,12 @@ function MainApp() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] flex flex-col max-w-md mx-auto bg-brand-cream relative overflow-hidden">
-      <div className="absolute top-[-10%] right-[-10%] w-72 h-72 bg-brand-rose/15 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
-      <div className="absolute bottom-[-5%] left-[-5%] w-56 h-56 bg-brand-sage/10 rounded-full blur-3xl pointer-events-none ambient-blob-2" />
-      <div className="absolute top-[40%] left-[50%] w-40 h-40 bg-brand-gold/8 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
+      {/* Skip link — keyboard-only affordance to bypass the header */}
+      <a href="#main-content" className="skip-to-content">Skip to content</a>
+
+      <div aria-hidden="true" className="absolute top-[-10%] right-[-10%] w-72 h-72 bg-brand-rose/15 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
+      <div aria-hidden="true" className="absolute bottom-[-5%] left-[-5%] w-56 h-56 bg-brand-sage/10 rounded-full blur-3xl pointer-events-none ambient-blob-2" />
+      <div aria-hidden="true" className="absolute top-[40%] left-[50%] w-40 h-40 bg-brand-gold/8 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
 
       {/* Header */}
       <header className="px-6 pt-8 pb-4 flex justify-between items-start z-10 safe-top">
@@ -209,7 +230,7 @@ function MainApp() {
       </header>
 
       {/* Main content */}
-      <main ref={data.mainRef} className="flex-1 overflow-y-auto px-6 pb-28 z-10 custom-scrollbar">
+      <main id="main-content" ref={data.mainRef} className="flex-1 overflow-y-auto px-6 pb-28 z-10 custom-scrollbar">
         <ErrorBoundary>
           <AnimatePresence mode="wait">
             {activeTab === 'home' && (

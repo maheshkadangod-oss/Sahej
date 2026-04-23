@@ -229,3 +229,84 @@ html.dark .pill-btn-active {
 html.dark .pill-btn-inactive {
   background: rgba(40, 45, 40, 0.4);
 }
+
+/* Printable OB report — clean, B&W-friendly output for clinical use */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm 14mm;
+  }
+  html, body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .print-hide { display: none !important; }
+  .printable-report {
+    font-size: 10.5pt;
+    color: #111;
+  }
+  .printable-report h1 { font-size: 18pt; }
+  .printable-report h2 { font-size: 11pt; }
+  /* Avoid breaking tables and key sections across pages */
+  .printable-report table,
+  .printable-report section { page-break-inside: avoid; }
+  /* Never dark-mode the print view */
+  html.dark .printable-report,
+  html.dark .printable-report * {
+    background-color: transparent !important;
+    color: #111 !important;
+  }
+}
+
+/* Reduced motion — respect OS / accessibility setting.
+   1. Kill the long continuous CSS animations (ambient blobs, breathing glow) that can
+      trigger vestibular issues.
+   2. motion/react stages mount-in animations by setting inline opacity:0 + transform.
+      With prefers-reduced-motion enabled, Motion suppresses the animation to final state,
+      but leaves those initial inline styles — which means content becomes invisible for
+      reduced-motion users. We force those elements visible so no one gets a blank screen. */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-blob-1,
+  .ambient-blob-2,
+  .breathe-active {
+    animation: none !important;
+  }
+  html, body { scroll-behavior: auto !important; }
+  /* Belt-and-suspenders: any element Motion has paused at opacity:0 / transform is snapped
+     to its final visible state. This is a no-op for elements Motion has already animated. */
+  [style*="opacity: 0"]:not(.print-hide) {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  [style*="transform: translateY"],
+  [style*="transform: translateX"],
+  [style*="transform: scale"] {
+    transform: none !important;
+  }
+}
+
+/* Focus ring — clear keyboard affordance for a11y.
+   Applies only to keyboard focus, not pointer clicks. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-clay);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip-to-content link — shown only when keyboard-focused */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  z-index: 100;
+}
+.skip-to-content:focus {
+  left: 1rem;
+  top: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--color-brand-clay);
+  color: white;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  text-decoration: none;
+}

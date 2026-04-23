@@ -1,14 +1,26 @@
-import { GoogleGenAI } from "@google/genai";
+// @google/genai is dynamically imported inside getAI() so the 270KB SDK is only
+// fetched when we actually fall back to the client-side path. The proxy path
+// is a plain fetch() and never needs the SDK. Most users will never load it.
+type GenAIClient = {
+  models: {
+    generateContent: (args: {
+      model: string;
+      contents: { role: string; parts: { text: string }[] }[];
+      config?: { systemInstruction?: string; temperature?: number };
+    }) => Promise<{ text?: string }>;
+  };
+};
 
-let aiInstance: GoogleGenAI | null = null;
+let aiInstance: GenAIClient | null = null;
 let currentKey: string | null = null;
 let proxyAvailable: boolean | null = null; // null = unknown, true/false = tested
 
-function getAI(): GoogleGenAI {
+async function getAI(): Promise<GenAIClient> {
   const apiKey = localStorage.getItem('sahej_api_key');
   if (!apiKey) throw new Error('No API key configured. Please add your Gemini API key in Settings.');
-  if (apiKey !== currentKey) {
-    aiInstance = new GoogleGenAI({ apiKey });
+  if (apiKey !== currentKey || !aiInstance) {
+    const { GoogleGenAI } = await import('@google/genai');
+    aiInstance = new GoogleGenAI({ apiKey }) as unknown as GenAIClient;
     currentKey = apiKey;
   }
   return aiInstance!;
@@ -85,7 +97,7 @@ async function callClientSDK(
   systemInstruction?: string,
   temperature = 0.7,
 ): Promise<string> {
-  const ai = getAI();
+  const ai = await getAI();
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents,

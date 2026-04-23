@@ -9,6 +9,9 @@ export default function Toast({ message }: ToastProps) {
     <AnimatePresence>
       {message && (
         <motion.div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 50 }}

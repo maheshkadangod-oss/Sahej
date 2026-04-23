@@ -8,6 +8,7 @@ import { t } from '../strings';
 import { hasApiKey } from '../services/gemini';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import { fallbackOptions, fallbackIntro } from '../data/fallbackResponses';
+import ClinicalByline from '../components/ClinicalByline';
 import type { ChatMessage } from '../types';
 
 interface ChatTabProps {
@@ -72,6 +73,8 @@ export default React.memo(function ChatTab({
       {/* Crisis surface — prominent, always-visible when triggered */}
       {crisisSurfaceShown && (
         <motion.div
+          role="alert"
+          aria-live="assertive"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-4 bg-brand-rose text-white rounded-2xl p-4 shadow-md"
@@ -101,6 +104,7 @@ export default React.memo(function ChatTab({
             <Phone className="w-4 h-4" />
             View Emergency Helplines
           </button>
+          <ClinicalByline source="crisis" compact className="!text-white/80 mt-3 block" />
         </motion.div>
       )}
 

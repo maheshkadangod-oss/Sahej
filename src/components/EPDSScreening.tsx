@@ -9,6 +9,7 @@ import {
   interpretEPDS,
   type EPDSResult,
 } from '../data/epds';
+import ClinicalByline from './ClinicalByline';
 
 const HISTORY_KEY = 'sahej_epds_history';
 
@@ -93,6 +94,9 @@ export default function EPDSScreening({ show, onClose, onViewHelplines }: EPDSSc
           onClick={(e) => { if (e.target === e.currentTarget && stage !== 'questions') onClose(); }}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="epds-modal-title"
             initial={{ y: 40, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 40, opacity: 0 }}
@@ -102,8 +106,8 @@ export default function EPDSScreening({ show, onClose, onViewHelplines }: EPDSSc
             {/* Header */}
             <div className="px-6 pt-6 pb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-brand-rose" />
-                <h2 className="text-lg font-serif">Emotional Check-in</h2>
+                <Heart className="w-5 h-5 text-brand-rose" aria-hidden="true" />
+                <h2 id="epds-modal-title" className="text-lg font-serif">Emotional Check-in</h2>
               </div>
               <button
                 onClick={onClose}
@@ -143,6 +147,8 @@ export default function EPDSScreening({ show, onClose, onViewHelplines }: EPDSSc
                     <p>Ten questions. Takes about two minutes.</p>
                     <p className="text-brand-sage italic">Your answers stay on your phone. Nobody else will see them.</p>
                   </div>
+
+                  <ClinicalByline source="epds" />
 
                   {history.length > 0 && (
                     <div className="mt-4 bg-white/40 dark:bg-white/5 rounded-2xl p-4 border border-brand-clay/15">
@@ -249,6 +255,7 @@ export default function EPDSScreening({ show, onClose, onViewHelplines }: EPDSSc
                   <p className="text-[11px] text-brand-sage italic text-center">
                     This is a screening tool, not a diagnosis. Only a doctor can diagnose.
                   </p>
+                  <ClinicalByline source="epds" compact className="text-center" />
 
                   <button
                     onClick={onClose}

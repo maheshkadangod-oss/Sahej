@@ -72,6 +72,9 @@ export default function SettingsModal({
           onClick={(e) => { if (e.target === e.currentTarget) setShowSettings(false); }}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-modal-title"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -79,7 +82,7 @@ export default function SettingsModal({
             className="bg-brand-cream w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl p-6 pb-8 max-h-[85vh] overflow-y-auto custom-scrollbar"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-medium">{t('settings')}</h2>
+              <h2 id="settings-modal-title" className="text-xl font-medium">{t('settings')}</h2>
               <button
                 onClick={() => setShowSettings(false)}
                 className="p-2.5 rounded-full hover:bg-black/5 active:bg-black/10 min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -310,6 +313,15 @@ export default function SettingsModal({
               >
                 💛 Emotional Check-in
                 <span className="block text-[10px] text-brand-sage font-normal mt-0.5">10 questions used by doctors worldwide · 2 minutes</span>
+              </button>
+
+              {/* Print OB report — clinically-shaped summary for doctor visits */}
+              <button
+                onClick={() => { setShowSettings(false); window.open('/report/print', '_blank'); }}
+                className="w-full py-3 bg-brand-clay/10 text-brand-ink rounded-2xl text-sm font-medium press-effect min-h-[44px]"
+              >
+                📄 Take to your OB
+                <span className="block text-[10px] text-brand-sage font-normal mt-0.5">Print or save a PDF summary of the last 30 days for your doctor</span>
               </button>
 
               {/* Share with family */}

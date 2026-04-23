@@ -8,6 +8,7 @@ import { milestones, parentingTips, resourceLinks } from '../data/resources';
 import { partnerSections } from '../data/partnerContent';
 import { redFlags, redFlagsIntro, emergencyRefLines } from '../data/redFlags';
 import { doctorSays, doctorSaysIntro, doctorSaysCategories } from '../data/doctorSays';
+import ClinicalByline from '../components/ClinicalByline';
 import type { ResourceSubTab } from '../types';
 
 interface HelpTabProps {
@@ -298,6 +299,8 @@ function RedFlagsSection() {
         </div>
       </div>
 
+      <ClinicalByline source="redFlags" />
+
       <div>
         <p className="text-xs uppercase tracking-wide text-brand-rose font-medium mb-2 px-1">Call now / go to ER</p>
         <div className="space-y-2">
@@ -384,6 +387,8 @@ function DoctorSaysSection() {
           </div>
         </div>
       </div>
+
+      <ClinicalByline source="doctorSays" />
 
       {/* Category pills */}
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 custom-scrollbar">

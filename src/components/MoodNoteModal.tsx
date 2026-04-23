@@ -26,16 +26,19 @@ export default function MoodNoteModal({
           onClick={(e) => { if (e.target === e.currentTarget) onSkip(); }}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mood-note-title"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             className="bg-brand-cream w-full max-w-sm rounded-3xl p-6"
           >
             <div className="text-center mb-4">
-              <span className="text-4xl">
+              <span className="text-4xl" aria-hidden="true">
                 {pendingMoodLevel === 1 ? '😔' : pendingMoodLevel === 2 ? '😕' : pendingMoodLevel === 3 ? '😐' : pendingMoodLevel === 4 ? '🙂' : '✨'}
               </span>
-              <h3 className="text-lg font-medium mt-2">{pendingMoodLevel ? moodLabel(pendingMoodLevel) : ''}</h3>
+              <h3 id="mood-note-title" className="text-lg font-medium mt-2">{pendingMoodLevel ? moodLabel(pendingMoodLevel) : ''}</h3>
             </div>
             <textarea
               value={moodNoteInput}
