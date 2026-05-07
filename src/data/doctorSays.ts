@@ -141,7 +141,7 @@ export const doctorSays: DoctorSays[] = [
     category: 'emotions',
     question: "Am I having baby blues or postpartum depression?",
     summary: "Blues usually peak around day 5 and ease by 2 weeks. PPD lasts longer.",
-    body: "Baby blues: tearfulness, mood swings, sensitivity — in the first 2 weeks, affecting up to 80% of mothers. Postpartum depression: persistent sadness, loss of interest, hopelessness — lasts longer than 2 weeks and interferes with daily life. PPD is treatable and common. The screening tool in Sakthi (EPDS) is a gentle way to check where you are.",
+    body: "Baby blues: tearfulness, mood swings, sensitivity — in the first 2 weeks, affecting up to 80% of mothers. Postpartum depression: persistent sadness, loss of interest, hopelessness — lasts longer than 2 weeks and interferes with daily life. PPD is treatable and common. The screening tool in Sahej (EPDS) is a gentle way to check where you are.",
   },
 ];
 

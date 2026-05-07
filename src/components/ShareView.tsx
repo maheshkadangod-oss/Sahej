@@ -52,7 +52,7 @@ export default function ShareView({ token }: { token: string }) {
         </div>
         <h1 className="text-2xl font-serif mb-3">Link not found</h1>
         <p className="text-brand-sage max-w-sm">{error || 'This share link may have expired. Share links are active for 30 days.'}</p>
-        <a href="/" className="mt-8 text-brand-clay underline underline-offset-4 text-sm">Learn about Sakthi</a>
+        <a href="/" className="mt-8 text-brand-clay underline underline-offset-4 text-sm">Learn about Sahej</a>
       </div>
     );
   }
@@ -148,7 +148,7 @@ export default function ShareView({ token }: { token: string }) {
           className="inline-flex items-center gap-2 text-xs text-brand-sage hover:text-brand-clay transition-colors"
         >
           <Heart className="w-3 h-3" />
-          Made with love on Sakthi
+          Made with love on Sahej
         </a>
       </footer>
     </div>

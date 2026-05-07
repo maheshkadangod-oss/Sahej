@@ -554,13 +554,13 @@ export function useAppData() {
         ...gamificationData,
         ...nutritionData,
         exportDate: new Date().toISOString(),
-        app: 'Sakthi v1.3.0'
+        app: 'Sahej v1.3.0'
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sakthi-data-${format(Date.now(), 'yyyy-MM-dd')}.json`;
+      a.download = `sahej-data-${format(Date.now(), 'yyyy-MM-dd')}.json`;
       a.click();
       URL.revokeObjectURL(url);
       localStorage.setItem('sahej_last_export', String(Date.now()));

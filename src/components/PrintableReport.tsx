@@ -175,7 +175,7 @@ export default function PrintableReport() {
               </p>
             </div>
             <div className="text-right text-xs text-gray-500">
-              <p className="font-serif italic">Sakthi</p>
+              <p className="font-serif italic">Sahej</p>
               <p>self-report · for clinical review</p>
             </div>
           </div>
@@ -373,13 +373,13 @@ export default function PrintableReport() {
         <footer className="mt-8 pt-4 border-t border-gray-300 text-[10px] text-gray-500 leading-relaxed">
           <p className="mb-1">
             <strong>About this report:</strong> All data on this page is self-reported by the patient
-            through the Sakthi app. Data is stored locally on the patient's device. This is not a
+            through the Sahej app. Data is stored locally on the patient's device. This is not a
             diagnostic tool. The EPDS is a validated screening instrument (Cox, Holden, Sagovsky 1987);
             a score ≥ 10 warrants clinical attention; ≥ 13 indicates probable postpartum depression.
             Any non-zero response to Q10 (self-harm) should prompt same-day evaluation regardless of
             total score.
           </p>
-          <p>Sakthi · sakthi app · Report generated {format(Date.now(), "MMM d, yyyy 'at' h:mm a")}</p>
+          <p>Sahej · sahej app · Report generated {format(Date.now(), "MMM d, yyyy 'at' h:mm a")}</p>
         </footer>
       </div>
     </div>

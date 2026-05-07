@@ -52,7 +52,7 @@ export default function FeedbackForm({ show, onClose, showToast }: FeedbackFormP
               </button>
             </div>
 
-            <p className="text-sm text-brand-sage">Your feedback helps us make Sakthi better for every mama.</p>
+            <p className="text-sm text-brand-sage">Your feedback helps us make Sahej better for every mama.</p>
 
             <textarea
               value={message}
