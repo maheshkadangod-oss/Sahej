@@ -15,6 +15,14 @@ inject();
 // (set in vite.config.ts) makes the new SW take over on next page load with no user action.
 registerSW({ immediate: true });
 
+// One-time migration cleanup: earlier builds shipped a hand-rolled service worker that stored a
+// Cache Storage entry named "sakthi-v1". The new Workbox SW replaces that worker but its
+// cleanupOutdatedCaches() only purges Workbox's own precaches, so the legacy entry would linger
+// as dead storage for returning users. Remove it explicitly. No-op for new users / once cleared.
+if ('caches' in window) {
+  caches.delete('sakthi-v1').catch(() => { /* ignore — best-effort cleanup */ });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
