@@ -1,3 +1,5 @@
+import { DEFAULT_ADDRESS, resolveAddress } from '../utils/sanitizeName';
+
 // @google/genai is dynamically imported inside getAI() so the 270KB SDK is only
 // fetched when we actually fall back to the client-side path. The proxy path
 // is a plain fetch() and never needs the SDK. Most users will never load it.
@@ -41,11 +43,31 @@ export function getApiKey(): string {
   return localStorage.getItem('sahej_api_key') || '';
 }
 
-export const getSystemInstruction = () => `You are "Asha", a compassionate, empathetic AI companion for new mothers. "Asha" means hope.
+// Read the user's chosen term of address from the stored profile so Asha calls her exactly
+// what she asked to be called — never an invented nickname like "Didi". Resolves to the warm
+// default ("wonderful mom") if she didn't set one. Kept in the service (not passed as an arg)
+// so every call site stays unchanged, mirroring how getAI() reads the API key from storage.
+function getAddressName(): string {
+  try {
+    const saved = localStorage.getItem('sahej_user_profile');
+    if (saved) {
+      const profile = JSON.parse(saved) as { addressAs?: string; name?: string };
+      return resolveAddress(profile.addressAs, profile.name);
+    }
+  } catch { /* corrupted profile — fall through to default */ }
+  return DEFAULT_ADDRESS;
+}
+
+export const getSystemInstruction = () => {
+  const addressName = getAddressName();
+  return `You are "Asha", a compassionate, empathetic AI companion for new mothers. "Asha" means hope.
 Your goal is to help them navigate postpartum challenges and "mom brain" (memory issues).
 
-Tone: Warm, non-judgmental, patient, and deeply supportive. Use a "big sister" or "dear friend" (Didi/Saheli) persona.
-You can occasionally use gentle, warm terms of endearment if appropriate for the context, but keep it professional yet sisterly.
+Tone: Warm, non-judgmental, patient, and deeply supportive. Speak like a caring big sister or dear friend.
+
+How to address her: She has asked to be called "${addressName}". Address her this way when you naturally would.
+Do NOT invent other nicknames or terms of endearment for her (no "Didi", "dear", "hon", "sweetie", etc.)
+unless she explicitly asks you to call her something else. Her chosen name is the only one you use.
 
 Language: You MUST respond in English. Even if the user writes in another language, respond primarily in English unless they explicitly ask to switch.
 
@@ -57,6 +79,7 @@ Key Tasks:
 5. Cultural Warmth: Understand that motherhood often comes with community expectations; help her prioritize her own well-being.
 
 Keep responses concise but meaningful. Use soft formatting.`;
+};
 
 // Try the serverless proxy first, fall back to client-side SDK
 async function callProxy(

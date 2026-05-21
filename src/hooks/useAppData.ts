@@ -5,6 +5,7 @@ import { useToast } from './useToast';
 import { t } from '../strings';
 import { getGeminiResponse, hasApiKey, saveApiKey, getApiKey } from '../services/gemini';
 import { detectCrisis, CRISIS_RESPONSE, WATCHFUL_RESPONSE, logCrisisEvent } from '../services/crisisDetection';
+import { sanitizeAddress, resolveAddress } from '../utils/sanitizeName';
 import {
   isNotificationEnabled, requestNotificationPermission,
   disableNotifications, startReminders, clearAllReminders
@@ -117,6 +118,7 @@ export function useAppData() {
 
   // Welcome form state
   const [welcomeName, setWelcomeName] = useState('');
+  const [welcomeAddressAs, setWelcomeAddressAs] = useState('');
   const [welcomeBabyName, setWelcomeBabyName] = useState('');
   const [welcomeBabyBirth, setWelcomeBabyBirth] = useState('');
   const [welcomeEmail, setWelcomeEmail] = useState('');
@@ -169,6 +171,9 @@ export function useAppData() {
   const todayJournalPrompt = journalPrompts.length > 0 ? journalPrompts[dayOfYear % journalPrompts.length] : '';
 
   const displayName = userProfile?.name || 'Mama';
+  // Affectionate term of address used in the home greeting and injected into Asha's prompt.
+  // Distinct from displayName (which is the real name used for share links).
+  const addressAs = resolveAddress(userProfile?.addressAs, userProfile?.name);
 
   const chartData = useMemo(() => [...moods]
     .sort((a, b) => a.timestamp - b.timestamp)
@@ -267,10 +272,39 @@ export function useAppData() {
     const profile: UserProfile = { name: welcomeName.trim() || 'Mama' };
     if (welcomeBabyName.trim()) profile.babyName = welcomeBabyName.trim();
     if (welcomeBabyBirth) profile.birthDate = welcomeBabyBirth;
+    // Term of address: keep it only if it passes the abuse filter. If empty or rejected,
+    // we store nothing and resolveAddress() falls back to her name or "wonderful mom".
+    const addr = sanitizeAddress(welcomeAddressAs);
+    if (addr.ok && addr.value) {
+      profile.addressAs = addr.value;
+    } else if (!addr.ok) {
+      showToast(addr.reason || "Let's pick something kind to call you.");
+    }
     setUserProfile(profile);
     localStorage.setItem('sahej_user_profile', JSON.stringify(profile));
     setShowWelcome(false);
-  }, [welcomeName, welcomeBabyName, welcomeBabyBirth]);
+  }, [welcomeName, welcomeAddressAs, welcomeBabyName, welcomeBabyBirth, showToast]);
+
+  // Update the term of address from Settings at any time. Validates against the abuse filter;
+  // an empty value clears it (reverting to the warm default). Returns whether it was accepted
+  // so the Settings UI can show inline feedback.
+  const handleUpdateAddressAs = useCallback((raw: string): boolean => {
+    const result = sanitizeAddress(raw);
+    if (!result.ok) {
+      showToast(result.reason || "Let's pick something kind to call you.");
+      return false;
+    }
+    setUserProfile(prev => {
+      const base: UserProfile = prev ?? { name: 'Mama' };
+      const next: UserProfile = { ...base };
+      if (result.value) next.addressAs = result.value;
+      else delete next.addressAs;
+      localStorage.setItem('sahej_user_profile', JSON.stringify(next));
+      return next;
+    });
+    showToast(result.value ? `Asha will call you ${result.value} 💛` : 'Reset to the default greeting.');
+    return true;
+  }, [showToast]);
 
   const handleGuestContinue = useCallback(() => {
     const profile: UserProfile = { name: 'Mama' };
@@ -668,6 +702,7 @@ export function useAppData() {
     pendingMoodLevel, setPendingMoodLevel,
     moodNoteInput, setMoodNoteInput,
     welcomeName, setWelcomeName,
+    welcomeAddressAs, setWelcomeAddressAs,
     welcomeBabyName, setWelcomeBabyName,
     welcomeBabyBirth, setWelcomeBabyBirth,
     welcomeEmail, setWelcomeEmail,
@@ -694,6 +729,7 @@ export function useAppData() {
     chatPrompts,
     todayJournalPrompt,
     displayName,
+    addressAs,
     chartData,
     weekMoods,
     avgMood,
@@ -716,6 +752,7 @@ export function useAppData() {
     // Handler functions
     handleGetStarted,
     handleGuestContinue,
+    handleUpdateAddressAs,
     startMoodLog,
     confirmMood,
     skipMoodNote,

@@ -77,7 +77,7 @@ export default function HomeTab({
   kegelActive, setKegelActive, kegelPhase, kegelReps,
 }: HomeTabProps) {
   const {
-    displayName, postpartumInfo, dailyAffirmation,
+    addressAs, postpartumInfo, dailyAffirmation,
     babysLast, updateBabysLast, formatTimeAgo,
     moodStreak, startMoodLog, moodLabel,
     todaySleep, pendingSleepHours, setPendingSleepHours, handleLogSleep, avgSleep,
@@ -110,7 +110,7 @@ export default function HomeTab({
       {/* 3AM Mode — shown first if late night */}
       {data.isLateNight && (
         <NightComfortCard
-          displayName={displayName}
+          displayName={addressAs}
           onTalkToAsha={() => onTalkToAsha("I'm awake at night and could use some company.")}
         />
       )}
@@ -120,7 +120,7 @@ export default function HomeTab({
       {/* Greeting */}
       <motion.section variants={sectionVariant} className="px-1">
         <h2 className="text-xl font-serif font-medium text-brand-ink mb-1">
-          {(t('helloName') as string).replace('{name}', displayName)}
+          {(t('helloName') as string).replace('{name}', addressAs)}
         </h2>
         {postpartumInfo && (
           <p className="text-xs text-brand-sage mb-3">

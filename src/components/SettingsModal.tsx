@@ -31,6 +31,8 @@ interface SettingsModalProps {
   onShowAdmin: () => void;
   onShareWithFamily: () => void;
   onStartEPDS: () => void;
+  addressAs: string;
+  onUpdateAddressAs: (raw: string) => boolean;
 }
 
 export default function SettingsModal({
@@ -45,12 +47,14 @@ export default function SettingsModal({
   handleResetApp,
   trustedContacts, addTrustedContact, removeTrustedContact,
   onShowFeedback, onShowAdmin, onShareWithFamily, onStartEPDS,
+  addressAs, onUpdateAddressAs,
 }: SettingsModalProps) {
   const importFileRef = useRef<HTMLInputElement>(null);
   const [showAddContact, setShowAddContact] = useState(false);
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [versionTaps, setVersionTaps] = useState(0);
+  const [addressInput, setAddressInput] = useState(addressAs);
   const online = useOnline();
 
   const handleVersionTap = () => {
@@ -94,6 +98,31 @@ export default function SettingsModal({
             </div>
 
             <div className="space-y-5">
+              {/* What Asha calls you — editable term of address */}
+              <div className="space-y-2">
+                <label htmlFor="address-as-input" className="text-sm font-medium">{t('addressAsLabel')}</label>
+                <div className="flex gap-2">
+                  <input
+                    id="address-as-input"
+                    type="text"
+                    value={addressInput}
+                    onChange={(e) => setAddressInput(e.target.value)}
+                    placeholder="wonderful mom"
+                    maxLength={30}
+                    className="flex-1 bg-white/60 border border-brand-clay/20 rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm min-h-[44px]"
+                  />
+                  <button
+                    onClick={() => onUpdateAddressAs(addressInput)}
+                    className="px-4 bg-brand-clay text-white rounded-2xl text-sm font-medium press-effect min-h-[44px] shrink-0"
+                  >
+                    {t('addressAsSave')}
+                  </button>
+                </div>
+                <p className="text-[11px] text-brand-sage italic">{t('addressAsHelp')}</p>
+              </div>
+
+              <div className="border-t border-brand-clay/10" />
+
               {/* Dark mode toggle */}
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-3">

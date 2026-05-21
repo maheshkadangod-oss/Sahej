@@ -192,6 +192,8 @@ function MainApp() {
       <WelcomeScreen
         welcomeName={data.welcomeName}
         setWelcomeName={data.setWelcomeName}
+        welcomeAddressAs={data.welcomeAddressAs}
+        setWelcomeAddressAs={data.setWelcomeAddressAs}
         welcomeBabyName={data.welcomeBabyName}
         setWelcomeBabyName={data.setWelcomeBabyName}
         welcomeBabyBirth={data.welcomeBabyBirth}
@@ -372,6 +374,8 @@ function MainApp() {
           onShowAdmin={() => setShowAdmin(true)}
           onShareWithFamily={handleShareWithFamily}
           onStartEPDS={() => setShowEPDS(true)}
+          addressAs={data.userProfile?.addressAs || ''}
+          onUpdateAddressAs={data.handleUpdateAddressAs}
         />
       </Suspense>
 

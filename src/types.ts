@@ -17,6 +17,9 @@ export interface UserProfile {
   babyName?: string;
   birthDate?: string;
   avatarColor?: string;
+  /** What the user wants Asha (and the home greeting) to call them. Falls back to a warm
+   *  default ("wonderful mom") when unset. See src/utils/sanitizeName.ts. */
+  addressAs?: string;
 }
 
 export interface SleepEntry {

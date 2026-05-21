@@ -6,6 +6,8 @@ import { registerUser } from '../services/adminApi';
 interface WelcomeScreenProps {
   welcomeName: string;
   setWelcomeName: (v: string) => void;
+  welcomeAddressAs: string;
+  setWelcomeAddressAs: (v: string) => void;
   welcomeBabyName: string;
   setWelcomeBabyName: (v: string) => void;
   welcomeBabyBirth: string;
@@ -18,6 +20,7 @@ interface WelcomeScreenProps {
 
 export default function WelcomeScreen({
   welcomeName, setWelcomeName,
+  welcomeAddressAs, setWelcomeAddressAs,
   welcomeBabyName, setWelcomeBabyName,
   welcomeBabyBirth, setWelcomeBabyBirth,
   welcomeEmail, setWelcomeEmail,
@@ -56,6 +59,15 @@ export default function WelcomeScreen({
             value={welcomeName}
             onChange={(e) => setWelcomeName(e.target.value)}
             enterKeyHint="next"
+            className="w-full bg-white/60 border border-brand-clay/20 rounded-2xl py-3.5 px-5 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm text-center"
+          />
+          <input
+            type="text"
+            placeholder={t('addressAsPlaceholder')}
+            value={welcomeAddressAs}
+            onChange={(e) => setWelcomeAddressAs(e.target.value)}
+            enterKeyHint="next"
+            maxLength={30}
             className="w-full bg-white/60 border border-brand-clay/20 rounded-2xl py-3.5 px-5 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm text-center"
           />
           <input
