@@ -26,7 +26,7 @@ export const strings: Record<string, any> = {
   ashaDidi: "Asha", ashaSaheli: "Your companion, always here.",
   ashaGreeting: "Hello, dear. I'm here for you. How are you feeling today?",
   typeHeart: "Type your heart out...",
-  home: "Home", mood: "Mood", vault: "Vault", asha: "Asha", help: "Help",
+  home: "Home", mood: "Mood", vault: "Vault", asha: "Asha", help: "Help", baby: "Baby",
   selfCare: "Self-Care Checklist",
   level5: "Feeling Radiant", level4: "Doing Okay", level3: "Just Being", level2: "A Bit Heavy", level1: "Feeling Low",
   babysLast: "Baby's Last...",

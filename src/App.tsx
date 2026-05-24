@@ -10,9 +10,11 @@ import { useGamification } from './hooks/useGamification';
 import { useNutrition } from './hooks/useNutrition';
 import { useMoodInsights } from './hooks/useMoodInsights';
 import { useCompanion } from './hooks/useCompanion';
+import { useBabyCare } from './hooks/useBabyCare';
 import { t } from './strings';
 import { getApiKey } from './services/gemini';
 import { createShareLink } from './services/adminApi';
+import { notifyOverdueVaccines } from './services/notifications';
 import { format } from 'date-fns';
 import { microAchievements } from './data/reassurances';
 import type { Tab } from './types';
@@ -30,6 +32,7 @@ const MoodTab = React.lazy(() => import('./tabs/MoodTab'));
 const MemoryTab = React.lazy(() => import('./tabs/MemoryTab'));
 const ChatTab = React.lazy(() => import('./tabs/ChatTab'));
 const HelpTab = React.lazy(() => import('./tabs/HelpTab'));
+const BabyTab = React.lazy(() => import('./tabs/BabyTab'));
 const SettingsModal = React.lazy(() => import('./components/SettingsModal'));
 const ResetActivityModal = React.lazy(() => import('./components/ResetActivityModal'));
 const FeedbackForm = React.lazy(() => import('./components/FeedbackForm'));
@@ -129,6 +132,11 @@ function MainApp() {
     showToast: data.showToast,
   });
 
+  const babyCare = useBabyCare({
+    birthDate: data.userProfile?.birthDate,
+    showToast: data.showToast,
+  });
+
   const onTalkToAsha = useCallback((message: string) => {
     data.setInputMessage(message);
     setActiveTab('chat');
@@ -185,6 +193,13 @@ function MainApp() {
   useEffect(() => {
     data.mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab]);
+
+  // Best-effort device nudge for overdue vaccines when the app is open (phase 1).
+  useEffect(() => {
+    if (data.showWelcome) return;
+    const overdue = babyCare.reminders.filter(r => r.severity === 'overdue').map(r => r.text);
+    if (overdue.length) notifyOverdueVaccines(overdue);
+  }, [babyCare.reminders, data.showWelcome]);
 
   // Welcome screen
   if (data.showWelcome) {
@@ -324,6 +339,15 @@ function MainApp() {
                 />
               </Suspense>
             )}
+            {activeTab === 'baby' && (
+              <Suspense fallback={<LoadingFallback />}>
+                <BabyTab
+                  babyName={data.userProfile?.babyName}
+                  babyCare={babyCare}
+                  onOpenSettings={() => { data.setApiKeyInput(getApiKey()); data.setShowSettings(true); }}
+                />
+              </Suspense>
+            )}
           </AnimatePresence>
         </ErrorBoundary>
       </main>
@@ -334,6 +358,7 @@ function MainApp() {
         setActiveTab={setActiveTab}
         moodsCount={data.moods.length}
         memoriesCount={data.memories.length}
+        babyAlertCount={babyCare.overdueCount}
       />
 
       {/* Mood Note Modal */}

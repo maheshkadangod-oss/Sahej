@@ -69,6 +69,25 @@ export function startReminders() {
   }
 }
 
+// Phase 1 baby-care reminder: best-effort device notification for overdue vaccinations.
+// This fires only while the app is open (web PWAs can't reliably schedule notifications when
+// fully closed — that's the phase-2 Web Push backend). The always-reliable surface is the
+// in-app Reminders card on the Baby tab; this is a bonus nudge, deduped to once per day.
+export function notifyOverdueVaccines(overdueTexts: string[]) {
+  if (!isNotificationEnabled() || isQuietHours()) return;
+  if (overdueTexts.length === 0) return;
+  const today = new Date().toDateString();
+  const key = 'sahej_last_baby_reminder';
+  if (localStorage.getItem(key) === today) return;
+  localStorage.setItem(key, today);
+  showNotification(
+    '💉 Vaccination reminder',
+    overdueTexts.length === 1
+      ? overdueTexts[0]
+      : `${overdueTexts.length} vaccinations are due for your baby — open Sahej to review.`,
+  );
+}
+
 export function clearAllReminders() {
   reminderTimerIds.forEach(id => {
     clearInterval(id);

@@ -83,7 +83,26 @@ export interface BabysLast {
   diaper: number | null;
 }
 
-export type Tab = 'home' | 'mood' | 'memory' | 'chat' | 'help';
+export interface WeightEntry {
+  id: string;
+  timestamp: number;
+  weightKg: number;
+  /** Baby's age in months at the time of weighing, if a birth date is set. */
+  ageMonths?: number;
+}
+
+export interface VaccineRecord {
+  id: string;
+  /** Links to a VaccineDose id from the reference schedule, or undefined for a custom entry. */
+  doseId?: string;
+  /** Vaccine name(s) — the dose label for scheduled, or free text for custom. */
+  name: string;
+  /** ISO date (yyyy-mm-dd) the vaccine was given. */
+  givenDate: string;
+  notes?: string;
+}
+
+export type Tab = 'home' | 'mood' | 'memory' | 'chat' | 'help' | 'baby';
 export type ResourceSubTab = 'helplines' | 'growth' | 'tips' | 'resources' | 'partner' | 'redflags' | 'doctorsays';
 
 // Nutrition
