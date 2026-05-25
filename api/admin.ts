@@ -79,6 +79,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const lifetimeRegistrations = redis ? (await redis.get<number>('registered_users_count') || users.length) : 0;
     const pushDevices = redis ? (await redis.scard('push:tokens').catch(() => 0)) : 0;
 
+    // ---- Analytics: totals + a 14-day series of unique visitors & sign-ups ----
+    const DAYS = 14;
+    const days: string[] = [];
+    for (let i = DAYS - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    // Sign-ups per day, derived from the stored registration timestamps (no extra storage).
+    const signupsByDay: Record<string, number> = {};
+    for (const u of users) {
+      if (!u?.timestamp) continue;
+      const day = new Date(u.timestamp).toISOString().slice(0, 10);
+      signupsByDay[day] = (signupsByDay[day] || 0) + 1;
+    }
+
+    let totalUniqueVisitors = 0;
+    let totalSessions = 0;
+    let dailyVisitors: number[] = new Array(DAYS).fill(0);
+    if (redis) {
+      try {
+        totalUniqueVisitors = await redis.scard('visitors:all').catch(() => 0);
+        totalSessions = (await redis.get<number>('visits:total')) || 0;
+        dailyVisitors = await Promise.all(
+          days.map(d => redis.scard(`visitors:day:${d}`).catch(() => 0)),
+        );
+      } catch { /* analytics best-effort */ }
+    }
+
+    const series = days.map((date, i) => ({
+      date,
+      visitors: dailyVisitors[i] || 0,
+      signups: signupsByDay[date] || 0,
+    }));
+
     return res.status(200).json({
       users,
       feedback,
@@ -87,6 +122,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         totalFeedback: feedback.length,
         lifetimeRegistrations,
         pushDevices,
+      },
+      analytics: {
+        totalUniqueVisitors,
+        totalSessions,
+        series,
       },
     });
   }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Users, MessageSquare, LogOut } from 'lucide-react';
+import { X, Users, MessageSquare, LogOut, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { adminLogin, fetchDashboard } from '../services/adminApi';
@@ -13,6 +13,11 @@ type DashboardData = {
   users: { name: string; email: string; babyName?: string; babyBirthDate?: string; timestamp: number }[];
   feedback: { id: string; message: string; email: string | null; timestamp: number }[];
   stats: { totalUsers: number; totalFeedback: number; lifetimeRegistrations?: number; pushDevices?: number };
+  analytics?: {
+    totalUniqueVisitors: number;
+    totalSessions: number;
+    series: { date: string; visitors: number; signups: number }[];
+  };
 };
 
 export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
@@ -21,7 +26,7 @@ export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'users' | 'feedback'>('users');
+  const [tab, setTab] = useState<'analytics' | 'users' | 'feedback'>('analytics');
 
   const loggedIn = !!token;
 
@@ -136,6 +141,12 @@ export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
                 {/* Tab switcher */}
                 <div className="flex gap-2">
                   <button
+                    onClick={() => setTab('analytics')}
+                    className={`flex-1 py-2 rounded-2xl text-sm font-medium flex items-center justify-center gap-1.5 min-h-[44px] ${tab === 'analytics' ? 'bg-brand-clay text-white' : 'bg-white/40 dark:bg-white/5 text-brand-sage'}`}
+                  >
+                    <BarChart3 className="w-4 h-4" /> Analytics
+                  </button>
+                  <button
                     onClick={() => setTab('users')}
                     className={`flex-1 py-2 rounded-2xl text-sm font-medium flex items-center justify-center gap-1.5 min-h-[44px] ${tab === 'users' ? 'bg-brand-clay text-white' : 'bg-white/40 dark:bg-white/5 text-brand-sage'}`}
                   >
@@ -155,6 +166,66 @@ export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
                     <div className="w-6 h-6 border-2 border-brand-clay/30 border-t-brand-clay rounded-full animate-spin" />
                   </div>
                 )}
+
+                {/* Analytics */}
+                {!loading && tab === 'analytics' && data && (() => {
+                  const a = data.analytics;
+                  const uniques = a?.totalUniqueVisitors ?? 0;
+                  const sessions = a?.totalSessions ?? 0;
+                  const lifetime = data.stats.lifetimeRegistrations ?? data.stats.totalUsers;
+                  const conversion = uniques > 0 ? Math.round((lifetime / uniques) * 100) : 0;
+                  const series = a?.series ?? [];
+                  const maxVal = Math.max(1, ...series.map(s => s.visitors));
+                  return (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-3 text-center">
+                          <p className="text-xl font-semibold">{uniques}</p>
+                          <p className="text-[10px] text-brand-sage leading-tight">Unique visitors</p>
+                        </div>
+                        <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-3 text-center">
+                          <p className="text-xl font-semibold">{sessions}</p>
+                          <p className="text-[10px] text-brand-sage leading-tight">Sessions</p>
+                        </div>
+                        <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-3 text-center">
+                          <p className="text-xl font-semibold">{conversion}%</p>
+                          <p className="text-[10px] text-brand-sage leading-tight">Visitor→signup</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-xs font-medium text-brand-ink/80">Last 14 days</p>
+                          <div className="flex items-center gap-3 text-[10px] text-brand-sage">
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-brand-clay inline-block" /> Visitors</span>
+                            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-brand-rose inline-block" /> Sign-ups</span>
+                          </div>
+                        </div>
+                        {series.length === 0 || maxVal <= 1 && series.every(s => s.visitors === 0 && s.signups === 0) ? (
+                          <p className="text-xs text-brand-sage italic text-center py-6">No visits recorded yet. Data appears as people open the app.</p>
+                        ) : (
+                          <>
+                            <div className="flex items-end gap-[3px] h-28">
+                              {series.map((s) => (
+                                <div key={s.date} className="flex-1 h-full flex flex-col justify-end relative group" title={`${s.date}: ${s.visitors} visitors, ${s.signups} sign-ups`}>
+                                  <div className="w-full rounded-t-sm bg-brand-clay/80 min-h-[2px]" style={{ height: `${Math.max(2, (s.visitors / maxVal) * 100)}%` }} />
+                                  {s.signups > 0 && (
+                                    <div className="w-full rounded-t-sm bg-brand-rose absolute bottom-0" style={{ height: `${Math.max(3, (s.signups / maxVal) * 100)}%` }} />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex justify-between mt-1.5 text-[8px] text-brand-sage/60">
+                              {series.map((s, i) => (
+                                <span key={s.date} className="flex-1 text-center">{i % 2 === 0 ? s.date.slice(8) : ''}</span>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Users list */}
                 {!loading && tab === 'users' && data && (

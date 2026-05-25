@@ -1,3 +1,23 @@
+// Privacy-light visit tracking — fires once per day per device. The device id is a random
+// UUID stored locally (no PII, no fingerprinting); it just lets us count unique visitors.
+export function trackVisit(): void {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    if (localStorage.getItem('sahej_visit_day') === today) return; // already counted today
+    localStorage.setItem('sahej_visit_day', today);
+    let deviceId = localStorage.getItem('sahej_device_id');
+    if (!deviceId) {
+      deviceId = crypto?.randomUUID?.() ?? String(Date.now()) + Math.random().toString(36).slice(2);
+      localStorage.setItem('sahej_device_id', deviceId);
+    }
+    void fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId }),
+    }).catch(() => { /* best-effort */ });
+  } catch { /* never let analytics break the app */ }
+}
+
 // Registration
 export async function registerUser(
   name: string,
@@ -51,6 +71,11 @@ export async function fetchDashboard(token: string): Promise<{
   users: { name: string; email: string; babyName?: string; babyBirthDate?: string; timestamp: number }[];
   feedback: { id: string; message: string; email: string | null; timestamp: number }[];
   stats: { totalUsers: number; totalFeedback: number; lifetimeRegistrations?: number; pushDevices?: number };
+  analytics?: {
+    totalUniqueVisitors: number;
+    totalSessions: number;
+    series: { date: string; visitors: number; signups: number }[];
+  };
 } | null> {
   try {
     const resp = await fetch('/api/admin', {

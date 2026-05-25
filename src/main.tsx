@@ -3,11 +3,15 @@ import { createRoot } from 'react-dom/client';
 import { inject } from '@vercel/analytics';
 import { registerSW } from 'virtual:pwa-register';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { trackVisit } from './services/adminApi';
 import App from './App.tsx';
 import './index.css';
 
 // Privacy-friendly analytics (no cookies, no personal data)
 inject();
+
+// Count this visit (once/day/device, random id, no PII) for the admin analytics view.
+trackVisit();
 
 // Register the service worker for offline support.
 // `immediate: true` means we attempt registration on load without waiting for idle — we want
