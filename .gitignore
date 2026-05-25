@@ -10,3 +10,4 @@ coverage/
 # Generated / confidential presentation decks — keep out of the repo
 Sahej-Demo-Deck.pdf
 Sahej-Funding-Deck.pdf
+.vercel
