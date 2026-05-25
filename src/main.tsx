@@ -23,6 +23,15 @@ if ('caches' in window) {
   caches.delete('sakthi-v1').catch(() => { /* ignore — best-effort cleanup */ });
 }
 
+// A quiet hello for the curious — discoverable, never in the way.
+if (import.meta.env.PROD) {
+  console.log(
+    '%cSahej 💛%c\nFor every mama doing her best at 3 a.m. — you are enough.\nIf you build things that care, come say hi.',
+    'font-family:Georgia,serif;font-size:20px;color:#C8956C;font-weight:600',
+    'font-family:system-ui;font-size:12px;color:#7D8C7C',
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>

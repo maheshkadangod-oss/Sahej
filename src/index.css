@@ -190,16 +190,6 @@ html.dark .markdown-body {
   animation: breathe-glow 4s ease-in-out infinite;
 }
 
-/* Modal slide-up */
-@keyframes slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-.modal-slide-up {
-  animation: slide-up 0.3s ease-out;
-}
-
 /* Button press effect — instant, responsive press; smooth, snappy release.
    A base transition makes the release ease back (previously it snapped), while the
    :active state presses in quickly. Both use a strong ease-out curve. */
