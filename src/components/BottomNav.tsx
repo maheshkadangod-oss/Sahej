@@ -56,7 +56,7 @@ interface BottomNavProps {
 
 export default React.memo(function BottomNav({ activeTab, setActiveTab, moodsCount, memoriesCount, babyAlertCount }: BottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-brand-clay/10 px-3 py-3 flex justify-between items-center z-20 safe-bottom" role="navigation" aria-label="Main navigation">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-brand-clay/10 px-3 py-3 flex justify-between items-center z-20 safe-bottom" role="navigation" aria-label="Main navigation">
       <NavButton active={activeTab === 'home'} onClick={() => setActiveTab('home')} icon={Heart} label={t('home')} />
       <NavButton active={activeTab === 'mood'} onClick={() => setActiveTab('mood')} icon={Calendar} label={t('mood')} badge={moodsCount > 0 ? moodsCount : undefined} />
       <NavButton active={activeTab === 'baby'} onClick={() => setActiveTab('baby')} icon={Baby} label={t('baby')} badge={babyAlertCount && babyAlertCount > 0 ? babyAlertCount : undefined} />

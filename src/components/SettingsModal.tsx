@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import {
-  X, Key, Moon, Sun, Bell, BellOff, Download, Upload, RotateCcw, AlertCircle, Users, Plus, Trash2
+  X, Moon, Sun, Bell, BellOff, Download, Upload, RotateCcw, AlertCircle, Users, Plus, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/cn';
@@ -16,11 +16,6 @@ interface SettingsModalProps {
   setDarkMode: (v: boolean) => void;
   notificationsOn: boolean;
   handleToggleNotifications: () => void;
-  apiKeyInput: string;
-  setApiKeyInput: (v: string) => void;
-  showApiKey: boolean;
-  setShowApiKey: (v: boolean) => void;
-  handleSaveApiKey: () => void;
   handleExportData: () => void;
   handleImportData: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleResetApp: () => void;
@@ -39,9 +34,6 @@ export default function SettingsModal({
   showSettings, setShowSettings,
   darkMode, setDarkMode,
   notificationsOn, handleToggleNotifications,
-  apiKeyInput, setApiKeyInput,
-  showApiKey, setShowApiKey,
-  handleSaveApiKey,
   handleExportData,
   handleImportData,
   handleResetApp,
@@ -167,38 +159,6 @@ export default function SettingsModal({
                   </button>
                 </div>
               )}
-
-              <div className="border-t border-brand-clay/10" />
-
-              {/* API Key */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Key className="w-4 h-4 text-brand-clay" />
-                  {t('apiKeyLabel')}
-                </label>
-                <div className="relative">
-                  <input
-                    type={showApiKey ? 'text' : 'password'}
-                    value={apiKeyInput}
-                    onChange={(e) => setApiKeyInput(e.target.value)}
-                    placeholder={t('apiKeyPlaceholder')}
-                    className="w-full bg-white/60 border border-brand-clay/20 rounded-2xl py-3.5 px-4 pr-20 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm"
-                  />
-                  <button
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-brand-sage hover:text-brand-ink py-1 px-2"
-                  >
-                    {showApiKey ? 'Hide' : 'Show'}
-                  </button>
-                </div>
-                <p className="text-[11px] text-brand-sage italic">{t('apiKeyHelp')}</p>
-                <button
-                  onClick={handleSaveApiKey}
-                  className="w-full py-3.5 bg-brand-clay text-white rounded-2xl text-sm font-medium hover:bg-brand-clay/90 active:bg-brand-clay/80 transition-all press-effect min-h-[48px]"
-                >
-                  {t('save')}
-                </button>
-              </div>
 
               <div className="border-t border-brand-clay/10" />
 

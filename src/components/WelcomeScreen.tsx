@@ -15,7 +15,6 @@ interface WelcomeScreenProps {
   welcomeEmail: string;
   setWelcomeEmail: (v: string) => void;
   onGetStarted: () => void;
-  onGuestContinue: () => void;
 }
 
 export default function WelcomeScreen({
@@ -24,16 +23,19 @@ export default function WelcomeScreen({
   welcomeBabyName, setWelcomeBabyName,
   welcomeBabyBirth, setWelcomeBabyBirth,
   welcomeEmail, setWelcomeEmail,
-  onGetStarted, onGuestContinue
+  onGetStarted,
 }: WelcomeScreenProps) {
+  const nameOk = welcomeName.trim().length > 0;
+  const emailOk = /^\S+@\S+\.\S+$/.test(welcomeEmail.trim());
+  const canSubmit = nameOk && emailOk;
+
   const handleGetStarted = () => {
-    // Fire-and-forget registration if email provided
-    if (welcomeEmail.trim() && welcomeEmail.includes('@')) {
-      registerUser(welcomeName.trim() || 'Mama', welcomeEmail.trim(), {
-        babyName: welcomeBabyName.trim() || undefined,
-        babyBirthDate: welcomeBabyBirth || undefined,
-      });
-    }
+    if (!canSubmit) return;
+    // Signup is required now — always register the mother.
+    registerUser(welcomeName.trim(), welcomeEmail.trim(), {
+      babyName: welcomeBabyName.trim() || undefined,
+      babyBirthDate: welcomeBabyBirth || undefined,
+    });
     onGetStarted();
   };
   return (
@@ -58,10 +60,11 @@ export default function WelcomeScreen({
         <div className="space-y-4 mb-8">
           <input
             type="text"
-            placeholder={t('yourName')}
+            placeholder={`${t('yourName')} *`}
             value={welcomeName}
             onChange={(e) => setWelcomeName(e.target.value)}
             enterKeyHint="next"
+            aria-label="Your name (required)"
             className="w-full bg-white/60 border border-brand-clay/20 rounded-2xl py-3.5 px-5 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm text-center"
           />
           <input
@@ -93,27 +96,27 @@ export default function WelcomeScreen({
           </div>
           <input
             type="email"
-            placeholder="Your email (optional — for updates)"
+            placeholder="Your email *"
             value={welcomeEmail}
             onChange={(e) => setWelcomeEmail(e.target.value)}
             enterKeyHint="done"
+            onKeyDown={(e) => { if (e.key === 'Enter' && canSubmit) handleGetStarted(); }}
+            aria-label="Your email (required)"
             className="w-full bg-white/60 border border-brand-clay/20 rounded-2xl py-3.5 px-5 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm text-center"
           />
         </div>
 
         <button
           onClick={handleGetStarted}
-          className="w-full py-4 bg-brand-clay text-white rounded-2xl text-sm font-medium hover:bg-brand-clay/90 active:bg-brand-clay/80 transition-all press-effect min-h-[52px] mb-4"
+          disabled={!canSubmit}
+          className="w-full py-4 bg-brand-clay text-white rounded-2xl text-sm font-medium hover:bg-brand-clay/90 active:bg-brand-clay/80 transition-all press-effect min-h-[52px] mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {t('getStarted')}
         </button>
 
-        <button
-          onClick={onGuestContinue}
-          className="text-brand-sage text-xs underline underline-offset-4 hover:text-brand-ink transition-colors min-h-[44px] px-4"
-        >
-          {t('continueAsGuest')}
-        </button>
+        <p className="text-[11px] text-brand-sage/80">
+          {canSubmit ? 'Your details stay private — used only to personalize Sahej.' : 'Name and email are required to continue.'}
+        </p>
       </motion.div>
     </div>
   );

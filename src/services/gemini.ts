@@ -1,46 +1,14 @@
 import { DEFAULT_ADDRESS, resolveAddress } from '../utils/sanitizeName';
 
-// @google/genai is dynamically imported inside getAI() so the 270KB SDK is only
-// fetched when we actually fall back to the client-side path. The proxy path
-// is a plain fetch() and never needs the SDK. Most users will never load it.
-type GenAIClient = {
-  models: {
-    generateContent: (args: {
-      model: string;
-      contents: { role: string; parts: { text: string }[] }[];
-      config?: { systemInstruction?: string; temperature?: number };
-    }) => Promise<{ text?: string }>;
-  };
-};
-
-let aiInstance: GenAIClient | null = null;
-let currentKey: string | null = null;
+// Asha runs entirely through our serverless proxy (/api/gemini), which holds the API key
+// server-side. We never ask users for their own key. `proxyAvailable` tracks whether the
+// proxy is reachable + configured; when it isn't, AI features degrade to the supportive
+// fallback menu instead of erroring.
 let proxyAvailable: boolean | null = null; // null = unknown, true/false = tested
 
-async function getAI(): Promise<GenAIClient> {
-  const apiKey = localStorage.getItem('sahej_api_key');
-  if (!apiKey) throw new Error('No API key configured. Please add your Gemini API key in Settings.');
-  if (apiKey !== currentKey || !aiInstance) {
-    const { GoogleGenAI } = await import('@google/genai');
-    aiInstance = new GoogleGenAI({ apiKey }) as unknown as GenAIClient;
-    currentKey = apiKey;
-  }
-  return aiInstance!;
-}
-
+/** Whether AI (the server proxy) is available. Used to gate optional AI features. */
 export function hasApiKey(): boolean {
-  // Proxy counts as having a key — user doesn't need to set one
-  return proxyAvailable === true || !!localStorage.getItem('sahej_api_key');
-}
-
-export function saveApiKey(key: string) {
-  localStorage.setItem('sahej_api_key', key.trim());
-  aiInstance = null;
-  currentKey = null;
-}
-
-export function getApiKey(): string {
-  return localStorage.getItem('sahej_api_key') || '';
+  return proxyAvailable !== false;
 }
 
 // Read the user's chosen term of address from the stored profile so Asha calls her exactly
@@ -81,7 +49,8 @@ Key Tasks:
 Keep responses concise but meaningful. Use soft formatting.`;
 };
 
-// Try the serverless proxy first, fall back to client-side SDK
+// Call the serverless proxy. Returns the text, or null if the proxy is unavailable /
+// not configured (so callers can degrade gracefully). Never asks the user for a key.
 async function callProxy(
   contents: { role: string; parts: { text: string }[] }[],
   systemInstruction?: string,
@@ -93,60 +62,31 @@ async function callProxy(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents, systemInstruction, temperature }),
     });
-    if (resp.status === 503) {
-      // Proxy exists but no server-side key configured
+    if (!resp.ok) {
+      // 503 = no server key; 429 = rate limited; etc. Mark unavailable so features degrade.
       proxyAvailable = false;
       return null;
-    }
-    if (!resp.ok) {
-      const data = await resp.json().catch(() => ({}));
-      throw new Error(data.error || `Proxy error ${resp.status}`);
     }
     proxyAvailable = true;
     const data = await resp.json();
     return data.text || null;
-  } catch (e) {
-    if (e instanceof TypeError && e.message.includes('fetch')) {
-      // Network error / proxy doesn't exist (local dev)
-      proxyAvailable = false;
-      return null;
-    }
-    throw e; // Re-throw actual API errors (429, etc.)
+  } catch {
+    // Network error / offline
+    proxyAvailable = false;
+    return null;
   }
 }
 
-async function callClientSDK(
-  contents: { role: string; parts: { text: string }[] }[],
-  systemInstruction?: string,
-  temperature = 0.7,
-): Promise<string> {
-  const ai = await getAI();
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents,
-    config: {
-      ...(systemInstruction ? { systemInstruction } : {}),
-      temperature,
-    },
-  });
-  return response.text || "I'm sorry, I couldn't generate a response. Please try again.";
-}
-
-// Unified Gemini call: proxy first, client SDK fallback
+// Unified Gemini call (proxy only). Throws if the proxy is unavailable so callers' existing
+// try/catch paths surface the supportive fallback instead of a broken state.
 export async function callGemini(
   contents: { role: string; parts: { text: string }[] }[],
   options?: { systemInstruction?: string; temperature?: number },
 ): Promise<string> {
   const { systemInstruction, temperature = 0.7 } = options || {};
-
-  // If proxy status unknown or available, try it first
-  if (proxyAvailable !== false) {
-    const result = await callProxy(contents, systemInstruction, temperature);
-    if (result !== null) return result;
-  }
-
-  // Fall back to client-side SDK (requires user's API key)
-  return callClientSDK(contents, systemInstruction, temperature);
+  const result = await callProxy(contents, systemInstruction, temperature);
+  if (result === null) throw new Error('AI temporarily unavailable');
+  return result;
 }
 
 // Legacy wrapper for chat (used by useAppData)

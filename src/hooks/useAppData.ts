@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { usePersistedState } from './usePersistedState';
 import { useToast } from './useToast';
 import { t } from '../strings';
-import { getGeminiResponse, hasApiKey, saveApiKey, getApiKey } from '../services/gemini';
+import { getGeminiResponse, hasApiKey } from '../services/gemini';
 import { detectCrisis, CRISIS_RESPONSE, WATCHFUL_RESPONSE, logCrisisEvent } from '../services/crisisDetection';
 import { sanitizeAddress, resolveAddress } from '../utils/sanitizeName';
 import {
@@ -94,13 +94,6 @@ export function useAppData() {
 
   // Settings state
   const [showSettings, setShowSettings] = useState(false);
-  const [apiKeyInput, setApiKeyInput] = useState('');
-  const [showApiKey, setShowApiKey] = useState(false);
-
-  // Load API key on mount
-  useEffect(() => {
-    setApiKeyInput(getApiKey());
-  }, []);
 
   // Chat state
   const [isTyping, setIsTyping] = useState(false);
@@ -306,13 +299,6 @@ export function useAppData() {
     return true;
   }, [showToast]);
 
-  const handleGuestContinue = useCallback(() => {
-    const profile: UserProfile = { name: 'Mama' };
-    setUserProfile(profile);
-    localStorage.setItem('sahej_user_profile', JSON.stringify(profile));
-    setShowWelcome(false);
-  }, []);
-
   const startMoodLog = useCallback((level: number) => {
     setPendingMoodLevel(level);
     setMoodNoteInput('');
@@ -459,9 +445,10 @@ export function useAppData() {
       return;
     }
 
-    // Normal path — call AI
+    // Normal path — call AI. If the AI proxy isn't available, show the supportive
+    // fallback menu instead of an error (we never ask the user for a key).
     if (!hasApiKey()) {
-      setChatError(t('chatNeedsKey'));
+      setFallbackModeShown(true);
       return;
     }
     setIsTyping(true);
@@ -542,11 +529,6 @@ export function useAppData() {
 
     return () => window.removeEventListener('online', handleOnline);
   }, [setChatHistory]);
-
-  const handleSaveApiKey = useCallback(() => {
-    saveApiKey(apiKeyInput);
-    setShowSettings(false);
-  }, [apiKeyInput]);
 
   const handleToggleNotifications = useCallback(async () => {
     if (notificationsOn) {
@@ -690,8 +672,6 @@ export function useAppData() {
     // UI state
     showWelcome, setShowWelcome,
     showSettings, setShowSettings,
-    apiKeyInput, setApiKeyInput,
-    showApiKey, setShowApiKey,
     notificationsOn, setNotificationsOn,
     toastMessage, showToast,
     importFileRef,
@@ -754,7 +734,6 @@ export function useAppData() {
 
     // Handler functions
     handleGetStarted,
-    handleGuestContinue,
     handleUpdateAddressAs,
     startMoodLog,
     confirmMood,
@@ -772,7 +751,6 @@ export function useAppData() {
     handleSaveJournal,
     handleAddMilestone,
     handleSendMessage,
-    handleSaveApiKey,
     handleToggleNotifications,
     handleExportData,
     handleImportData,

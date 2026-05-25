@@ -103,14 +103,13 @@ export default defineConfig({
     // first-paint network bill for no gain.
     modulePreload: {
       resolveDependencies: (_filename, deps) =>
-        deps.filter(d => !/\/(recharts|markdown|genai)-/.test(d)),
+        deps.filter(d => !/\/(recharts|markdown)-/.test(d)),
     },
     rollupOptions: {
       output: {
         manualChunks: {
           recharts: ['recharts'],
           markdown: ['react-markdown'],
-          genai: ['@google/genai'],
         },
       },
     },

@@ -1,11 +1,10 @@
 import React from 'react';
-import { Sparkles, Send, Key, AlertCircle, Mic, MicOff, Phone, X, Clock, WifiOff } from 'lucide-react';
+import { Sparkles, Send, AlertCircle, Mic, MicOff, Phone, X, Clock, WifiOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
 import Markdown from 'react-markdown';
 import { cn } from '../lib/cn';
 import { t } from '../strings';
-import { hasApiKey } from '../services/gemini';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useOnline } from '../hooks/useOnline';
 import { fallbackOptions, fallbackIntro } from '../data/fallbackResponses';
@@ -116,12 +115,6 @@ export default React.memo(function ChatTab({
             <div className="text-center py-6 text-brand-sage italic text-sm">
               "{t('ashaGreeting')}"
             </div>
-            {!hasApiKey() && (
-              <div className="flex items-start gap-3 p-4 bg-brand-gold/10 border border-brand-gold/20 rounded-2xl">
-                <Key className="w-5 h-5 text-brand-clay shrink-0 mt-0.5" />
-                <p className="text-xs text-brand-ink/70">{t('chatNeedsKey')}</p>
-              </div>
-            )}
             <div className="grid grid-cols-1 gap-2">
               {chatPrompts.map((prompt, i) => (
                 <button

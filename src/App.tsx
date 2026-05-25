@@ -12,7 +12,6 @@ import { useMoodInsights } from './hooks/useMoodInsights';
 import { useCompanion } from './hooks/useCompanion';
 import { useBabyCare } from './hooks/useBabyCare';
 import { t } from './strings';
-import { getApiKey } from './services/gemini';
 import { createShareLink } from './services/adminApi';
 import { notifyOverdueVaccines } from './services/notifications';
 import { syncPushReminders, isPushConfigured } from './services/push';
@@ -23,6 +22,7 @@ import type { Tab } from './types';
 // Eagerly loaded components
 import WelcomeScreen from './components/WelcomeScreen';
 import BottomNav from './components/BottomNav';
+import Sidebar from './components/Sidebar';
 import Toast from './components/Toast';
 import MoodNoteModal from './components/MoodNoteModal';
 import { OfflineBanner } from './components/OfflineBanner';
@@ -225,44 +225,56 @@ function MainApp() {
         welcomeEmail={data.welcomeEmail}
         setWelcomeEmail={data.setWelcomeEmail}
         onGetStarted={data.handleGetStarted}
-        onGuestContinue={data.handleGuestContinue}
       />
     );
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col max-w-md mx-auto bg-brand-cream relative overflow-hidden">
+    <div className="min-h-screen min-h-[100dvh] bg-brand-cream relative overflow-x-hidden">
       {/* Skip link — keyboard-only affordance to bypass the header */}
       <a href="#main-content" className="skip-to-content">Skip to content</a>
 
       {/* Offline banner — slides in from top when network is lost, reassuring copy */}
       <OfflineBanner />
 
-      <div aria-hidden="true" className="absolute top-[-10%] right-[-10%] w-72 h-72 bg-brand-rose/15 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
-      <div aria-hidden="true" className="absolute bottom-[-5%] left-[-5%] w-56 h-56 bg-brand-sage/10 rounded-full blur-3xl pointer-events-none ambient-blob-2" />
-      <div aria-hidden="true" className="absolute top-[40%] left-[50%] w-40 h-40 bg-brand-gold/8 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
+      {/* Ambient blobs — fixed to the viewport so the whole canvas (incl. desktop) has depth */}
+      <div aria-hidden="true" className="fixed top-[-10%] right-[-10%] w-72 h-72 lg:w-[34rem] lg:h-[34rem] bg-brand-rose/15 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
+      <div aria-hidden="true" className="fixed bottom-[-5%] left-[-5%] w-56 h-56 lg:w-[26rem] lg:h-[26rem] bg-brand-sage/10 rounded-full blur-3xl pointer-events-none ambient-blob-2" />
+      <div aria-hidden="true" className="fixed top-[40%] left-[50%] w-40 h-40 bg-brand-gold/8 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
 
-      {/* Header */}
-      <header className="px-6 pt-8 pb-4 flex justify-between items-start z-10 safe-top">
-        <div>
-          <h1 className="text-3xl font-semibold text-brand-ink">{t('appName')}</h1>
-          <p className="text-brand-sage text-sm italic">{t('tagline')}</p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <button
-            onClick={() => { data.setApiKeyInput(getApiKey()); data.setShowSettings(true); }}
-            className="p-3 rounded-full hover:bg-black/5 active:bg-black/10 transition-colors min-w-[52px] min-h-[52px] flex items-center justify-center"
-            aria-label={t('settings')}
-          >
-            <Settings className="w-6 h-6 text-brand-ink/60" />
-          </button>
-        </div>
-      </header>
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl">
+        {/* Desktop sidebar navigation */}
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          moodsCount={data.moods.length}
+          memoriesCount={data.memories.length}
+          babyAlertCount={babyCare.overdueCount}
+          onOpenSettings={() => data.setShowSettings(true)}
+        />
 
-      {/* Main content */}
-      <main id="main-content" ref={data.mainRef} className="flex-1 overflow-y-auto px-6 pb-28 z-10 custom-scrollbar">
-        <ErrorBoundary>
-          <AnimatePresence mode="wait">
+        {/* App column — a centered phone-width column on mobile, fills the space on desktop */}
+        <div className="flex flex-col flex-1 min-w-0 w-full max-w-md mx-auto min-h-[100dvh] lg:max-w-none lg:mx-0 lg:h-[100dvh] lg:overflow-hidden">
+          {/* Mobile header — on desktop the sidebar carries the brand + settings */}
+          <header className="lg:hidden px-6 pt-8 pb-4 flex justify-between items-start z-10 safe-top">
+            <div>
+              <h1 className="text-3xl font-semibold text-brand-ink">{t('appName')}</h1>
+              <p className="text-brand-sage text-sm italic">{t('tagline')}</p>
+            </div>
+            <button
+              onClick={() => data.setShowSettings(true)}
+              className="p-3 rounded-full hover:bg-black/5 active:bg-black/10 transition-colors min-w-[52px] min-h-[52px] flex items-center justify-center"
+              aria-label={t('settings')}
+            >
+              <Settings className="w-6 h-6 text-brand-ink/60" />
+            </button>
+          </header>
+
+          {/* Main content */}
+          <main id="main-content" ref={data.mainRef} className="flex-1 overflow-y-auto px-6 pb-28 lg:px-10 lg:pt-10 lg:pb-12 z-10 custom-scrollbar">
+            <div className="lg:max-w-2xl lg:mx-auto w-full">
+              <ErrorBoundary>
+                <AnimatePresence mode="wait">
             {activeTab === 'home' && (
               <HomeTab
                 data={data}
@@ -353,15 +365,18 @@ function MainApp() {
                 <BabyTab
                   babyName={data.userProfile?.babyName}
                   babyCare={babyCare}
-                  onOpenSettings={() => { data.setApiKeyInput(getApiKey()); data.setShowSettings(true); }}
+                  onOpenSettings={() => data.setShowSettings(true)}
                 />
               </Suspense>
             )}
-          </AnimatePresence>
-        </ErrorBoundary>
-      </main>
+              </AnimatePresence>
+            </ErrorBoundary>
+            </div>
+          </main>
+        </div>
+      </div>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation — mobile only (desktop uses the sidebar) */}
       <BottomNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -393,11 +408,6 @@ function MainApp() {
           setDarkMode={data.setDarkMode}
           notificationsOn={data.notificationsOn}
           handleToggleNotifications={data.handleToggleNotifications}
-          apiKeyInput={data.apiKeyInput}
-          setApiKeyInput={data.setApiKeyInput}
-          showApiKey={data.showApiKey}
-          setShowApiKey={data.setShowApiKey}
-          handleSaveApiKey={data.handleSaveApiKey}
           handleExportData={data.handleExportData}
           handleImportData={data.handleImportData}
           handleResetApp={data.handleResetApp}
