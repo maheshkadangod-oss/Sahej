@@ -1,12 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createRequire } from 'node:module';
 import { getRedis, cors, rateLimit } from './_shared';
 
-// web-push is loaded lazily inside the send path only — it's a CommonJS package and a top-level
-// ESM import can fail at runtime under Vercel's bundler. The subscribe/unsubscribe paths never
-// need it, so deferring keeps the whole function robust.
-async function getWebPush() {
-  const mod: any = await import('web-push');
-  return (mod.default ?? mod);
+// web-push is a CommonJS package whose dynamic requires break Vercel's esbuild bundling.
+// Load it through createRequire so Vercel ships the real package (and its deps) in the
+// function's node_modules and Node resolves it natively at runtime, unbundled.
+const nodeRequire = createRequire(import.meta.url);
+function getWebPush(): any {
+  return nodeRequire('web-push');
 }
 
 // Web Push backend (Phase 2).
@@ -26,9 +27,10 @@ interface StoredReminder { id: string; fireAt: number; title: string; body: stri
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     return await route(req, res);
-  } catch (err) {
+  } catch (err: any) {
     console.error('push handler error:', err);
-    return res.status(500).json({ error: 'push handler failed' });
+    // Temporary diagnostic detail — remove once confirmed working.
+    return res.status(500).json({ error: 'push handler failed', code: err?.code, message: String(err?.message || err).slice(0, 300) });
   }
 }
 
@@ -85,7 +87,7 @@ async function route(req: VercelRequest, res: VercelResponse) {
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
       return res.status(200).json({ sent: 0, note: 'vapid not configured' });
     }
-    const webpush = await getWebPush();
+    const webpush = getWebPush();
     webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:hello@sahej.app', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
     const now = Date.now();
