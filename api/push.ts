@@ -1,13 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createRequire } from 'node:module';
 import { getRedis, cors, rateLimit } from './_shared';
 
-// web-push is a CommonJS package whose dynamic requires break Vercel's esbuild bundling.
-// Load it through createRequire so Vercel ships the real package (and its deps) in the
-// function's node_modules and Node resolves it natively at runtime, unbundled.
-const nodeRequire = createRequire(import.meta.url);
-function getWebPush(): any {
-  return nodeRequire('web-push');
+// web-push is loaded lazily inside the send path so a load failure is catchable (not a hard
+// module-load crash). Try a few resolution shapes so it works whether Vercel treats this
+// function as ESM or CJS.
+async function getWebPush(): Promise<any> {
+  const mod: any = await import('web-push');
+  return mod?.default?.setVapidDetails ? mod.default : mod;
 }
 
 // Web Push backend (Phase 2).
@@ -87,7 +86,7 @@ async function route(req: VercelRequest, res: VercelResponse) {
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
       return res.status(200).json({ sent: 0, note: 'vapid not configured' });
     }
-    const webpush = getWebPush();
+    const webpush = await getWebPush();
     webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:hello@sahej.app', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
     const now = Date.now();
