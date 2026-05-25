@@ -1,13 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getRedis, cors, rateLimit } from './_shared';
-
-// web-push is loaded lazily inside the send path so a load failure is catchable (not a hard
-// module-load crash). Try a few resolution shapes so it works whether Vercel treats this
-// function as ESM or CJS.
-async function getWebPush(): Promise<any> {
-  const mod: any = await import('web-push');
-  return mod?.default?.setVapidDetails ? mod.default : mod;
-}
+import { sendWebPush } from './_webpush';
 
 // Web Push backend (Phase 2).
 //   POST { action: 'subscribe', token, subscription, reminders }  → store this device's
@@ -26,10 +19,9 @@ interface StoredReminder { id: string; fireAt: number; title: string; body: stri
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     return await route(req, res);
-  } catch (err: any) {
+  } catch (err) {
     console.error('push handler error:', err);
-    // Temporary diagnostic detail — remove once confirmed working.
-    return res.status(500).json({ error: 'push handler failed', code: err?.code, message: String(err?.message || err).slice(0, 300) });
+    return res.status(500).json({ error: 'push handler failed' });
   }
 }
 
@@ -86,8 +78,7 @@ async function route(req: VercelRequest, res: VercelResponse) {
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
       return res.status(200).json({ sent: 0, note: 'vapid not configured' });
     }
-    const webpush = await getWebPush();
-    webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:hello@sahej.app', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    const vapid = { subject: VAPID_SUBJECT || 'mailto:hello@sahej.app', publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY };
 
     const now = Date.now();
     const tokens = (await redis.smembers('push:tokens')) as string[];
@@ -104,12 +95,12 @@ async function route(req: VercelRequest, res: VercelResponse) {
       let gone = false;
       for (const r of due) {
         try {
-          await webpush.sendNotification(data.subscription, JSON.stringify({ title: r.title, body: r.body, url: '/', tag: r.id }));
-          r.sent = true; changed = true; sent++;
-        } catch (err: any) {
-          // 404/410 = subscription expired/unsubscribed → drop this device.
-          if (err?.statusCode === 404 || err?.statusCode === 410) { gone = true; break; }
-          // other errors: leave unsent, retry next run
+          const status = await sendWebPush(data.subscription, JSON.stringify({ title: r.title, body: r.body, url: '/', tag: r.id }), vapid);
+          if (status === 404 || status === 410) { gone = true; break; } // subscription dead
+          if (status >= 200 && status < 300) { r.sent = true; changed = true; sent++; }
+          // other statuses: leave unsent, retry next run
+        } catch {
+          // network/crypto error: leave unsent, retry next run
         }
       }
 
