@@ -55,11 +55,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Fetch data
     const users = redis ? (await redis.get<any[]>('registered_users') || []) : [];
     const feedback = redis ? (await redis.get<any[]>('feedback_items') || []) : [];
+    const lifetimeRegistrations = redis ? (await redis.get<number>('registered_users_count') || users.length) : 0;
+    const pushDevices = redis ? (await redis.scard('push:tokens').catch(() => 0)) : 0;
 
     return res.status(200).json({
       users,
       feedback,
-      stats: { totalUsers: users.length, totalFeedback: feedback.length },
+      stats: {
+        totalUsers: users.length,
+        totalFeedback: feedback.length,
+        lifetimeRegistrations,
+        pushDevices,
+      },
     });
   }
 

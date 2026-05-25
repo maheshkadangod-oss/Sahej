@@ -15,6 +15,7 @@ import { t } from './strings';
 import { getApiKey } from './services/gemini';
 import { createShareLink } from './services/adminApi';
 import { notifyOverdueVaccines } from './services/notifications';
+import { syncPushReminders, isPushConfigured } from './services/push';
 import { format } from 'date-fns';
 import { microAchievements } from './data/reassurances';
 import type { Tab } from './types';
@@ -134,6 +135,7 @@ function MainApp() {
 
   const babyCare = useBabyCare({
     birthDate: data.userProfile?.birthDate,
+    babyName: data.userProfile?.babyName,
     showToast: data.showToast,
   });
 
@@ -200,6 +202,13 @@ function MainApp() {
     const overdue = babyCare.reminders.filter(r => r.severity === 'overdue').map(r => r.text);
     if (overdue.length) notifyOverdueVaccines(overdue);
   }, [babyCare.reminders, data.showWelcome]);
+
+  // Phase 2: sync future-dated reminders to the push backend when notifications are on.
+  // No-op if push isn't configured (VAPID unset) — Phase-1 in-app reminders still cover it.
+  useEffect(() => {
+    if (data.showWelcome || !data.notificationsOn || !isPushConfigured()) return;
+    void syncPushReminders(babyCare.pushReminders);
+  }, [data.notificationsOn, babyCare.pushReminders, data.showWelcome]);
 
   // Welcome screen
   if (data.showWelcome) {

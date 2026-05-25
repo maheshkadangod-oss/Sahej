@@ -15,6 +15,11 @@ export default defineConfig({
       // Precache everything in dist so first-offline-visit works, not just warm-cache reloads.
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,woff2,png,webmanifest}'],
+        // Inject our custom push + notificationclick handlers into the generated SW.
+        // Keeps the Workbox precache/runtime-caching intact while adding Web Push support.
+        // push-sw.js is also precached (default glob) so importScripts succeeds even on an
+        // offline SW restart.
+        importScripts: ['/push-sw.js'],
         // Single-page app: any unknown route falls back to index.html (client routes /share/*, /report/print).
         navigateFallback: '/index.html',
         // Don't fall back for actual API misses — let them 404 naturally so the UI can handle it.

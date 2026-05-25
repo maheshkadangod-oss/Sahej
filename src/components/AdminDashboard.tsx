@@ -10,9 +10,9 @@ interface AdminDashboardProps {
 }
 
 type DashboardData = {
-  users: { name: string; email: string; timestamp: number }[];
+  users: { name: string; email: string; babyName?: string; babyBirthDate?: string; timestamp: number }[];
   feedback: { id: string; message: string; email: string | null; timestamp: number }[];
-  stats: { totalUsers: number; totalFeedback: number };
+  stats: { totalUsers: number; totalFeedback: number; lifetimeRegistrations?: number; pushDevices?: number };
 };
 
 export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
@@ -113,12 +113,20 @@ export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
               <div className="space-y-4">
                 {/* Stats */}
                 {data && (
-                  <div className="flex gap-3">
-                    <div className="flex-1 bg-white/40 dark:bg-white/5 rounded-2xl p-4 text-center">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-4 text-center">
                       <p className="text-2xl font-semibold">{data.stats.totalUsers}</p>
                       <p className="text-xs text-brand-sage">Registered</p>
                     </div>
-                    <div className="flex-1 bg-white/40 dark:bg-white/5 rounded-2xl p-4 text-center">
+                    <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-4 text-center">
+                      <p className="text-2xl font-semibold">{data.stats.lifetimeRegistrations ?? data.stats.totalUsers}</p>
+                      <p className="text-xs text-brand-sage">Lifetime sign-ups</p>
+                    </div>
+                    <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-4 text-center">
+                      <p className="text-2xl font-semibold">{data.stats.pushDevices ?? 0}</p>
+                      <p className="text-xs text-brand-sage">Push devices</p>
+                    </div>
+                    <div className="bg-white/40 dark:bg-white/5 rounded-2xl p-4 text-center">
                       <p className="text-2xl font-semibold">{data.stats.totalFeedback}</p>
                       <p className="text-xs text-brand-sage">Feedback</p>
                     </div>
@@ -156,8 +164,11 @@ export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
                     ) : (
                       data.users.map((u, i) => (
                         <div key={i} className="bg-white/40 dark:bg-white/5 rounded-2xl p-3">
-                          <p className="text-sm font-medium">{u.name}</p>
+                          <p className="text-sm font-medium">{u.name || '—'}</p>
                           <p className="text-xs text-brand-sage">{u.email}</p>
+                          {u.babyName && (
+                            <p className="text-[11px] text-brand-sage">👶 {u.babyName}{u.babyBirthDate ? ` · born ${u.babyBirthDate}` : ''}</p>
+                          )}
                           <p className="text-[10px] text-brand-sage/60">{format(u.timestamp, 'MMM d, yyyy h:mm a')}</p>
                         </div>
                       ))

@@ -31,10 +31,12 @@ const WEIGHT_REMINDER_DAYS = 30;
 interface UseBabyCareArgs {
   /** Baby's birth date (ISO yyyy-mm-dd) from the user profile, if set. */
   birthDate?: string;
+  /** Baby's name, for personalizing push reminder copy. */
+  babyName?: string;
   showToast: (msg: string) => void;
 }
 
-export function useBabyCare({ birthDate, showToast }: UseBabyCareArgs) {
+export function useBabyCare({ birthDate, babyName, showToast }: UseBabyCareArgs) {
   const [weightLog, setWeightLog] = usePersistedState<WeightEntry[]>('sahej_weight_log', []);
   const [vaccineRecords, setVaccineRecords] = usePersistedState<VaccineRecord[]>('sahej_vaccine_records', []);
 
@@ -100,6 +102,39 @@ export function useBabyCare({ birthDate, showToast }: UseBabyCareArgs) {
     return list;
   }, [vaccineStatuses, ageMonths, latestWeight]);
 
+  // Future-dated reminders for the Web Push backend (Phase 2). The server sends these even when
+  // the app is closed. We schedule one nudge ~3 days before each upcoming vaccine due date, plus
+  // a monthly weight check-in. Only future fire times are included (past-due is handled in-app).
+  const pushReminders = useMemo(() => {
+    const now = Date.now();
+    const name = babyName?.trim() || 'your baby';
+    const list: { id: string; fireAt: number; title: string; body: string }[] = [];
+    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+
+    for (const v of vaccineStatuses) {
+      if (v.state === 'given' || !v.dueDate) continue;
+      const fireAt = v.dueDate.getTime() - THREE_DAYS;
+      if (fireAt > now) {
+        list.push({
+          id: `vac-${v.dose.id}`,
+          fireAt,
+          title: '💉 Vaccination coming up',
+          body: `${name}'s ${v.dose.ageLabel} vaccines are due in ~3 days: ${v.dose.vaccines.join(', ')}`,
+        });
+      }
+    }
+
+    // Monthly weight check-in (only while baby is under 2).
+    if (ageMonths != null && ageMonths <= 24) {
+      const base = latestWeight ? latestWeight.timestamp : now;
+      const fireAt = base + WEIGHT_REMINDER_DAYS * 24 * 60 * 60 * 1000;
+      if (fireAt > now) {
+        list.push({ id: 'weight-monthly', fireAt, title: '⚖️ Weight check-in', body: `Time for ${name}'s monthly weight check-in in Sahej.` });
+      }
+    }
+    return list;
+  }, [vaccineStatuses, ageMonths, latestWeight, babyName]);
+
   const addWeight = useCallback((weightKg: number) => {
     if (!weightKg || weightKg <= 0 || weightKg > 40) { showToast('Please enter a valid weight in kg.'); return; }
     const entry: WeightEntry = {
@@ -156,5 +191,6 @@ export function useBabyCare({ birthDate, showToast }: UseBabyCareArgs) {
     markVaccineGiven, unmarkVaccine, addCustomVaccine, deleteVaccineRecord,
     currentFeedingStage,
     reminders,
+    pushReminders,
   };
 }

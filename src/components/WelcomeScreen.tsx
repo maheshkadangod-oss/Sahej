@@ -29,7 +29,10 @@ export default function WelcomeScreen({
   const handleGetStarted = () => {
     // Fire-and-forget registration if email provided
     if (welcomeEmail.trim() && welcomeEmail.includes('@')) {
-      registerUser(welcomeName.trim() || 'Mama', welcomeEmail.trim());
+      registerUser(welcomeName.trim() || 'Mama', welcomeEmail.trim(), {
+        babyName: welcomeBabyName.trim() || undefined,
+        babyBirthDate: welcomeBabyBirth || undefined,
+      });
     }
     onGetStarted();
   };

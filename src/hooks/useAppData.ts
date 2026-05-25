@@ -552,10 +552,13 @@ export function useAppData() {
     if (notificationsOn) {
       disableNotifications();
       setNotificationsOn(false);
+      // Tell the push backend to stop sending to this device (best-effort).
+      import('../services/push').then(m => m.unsyncPush()).catch(() => {});
     } else {
       const granted = await requestNotificationPermission();
       setNotificationsOn(granted);
       if (granted) startReminders();
+      // The push-sync effect in App.tsx picks up from here once notificationsOn flips true.
     }
   }, [notificationsOn]);
 

@@ -1,10 +1,14 @@
 // Registration
-export async function registerUser(name: string, email: string): Promise<boolean> {
+export async function registerUser(
+  name: string,
+  email: string,
+  extra?: { babyName?: string; babyBirthDate?: string },
+): Promise<boolean> {
   try {
     const resp = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email }),
+      body: JSON.stringify({ name, email, ...extra }),
     });
     return resp.ok;
   } catch {
@@ -44,9 +48,9 @@ export async function adminLogin(email: string): Promise<string | null> {
 
 // Admin dashboard data
 export async function fetchDashboard(token: string): Promise<{
-  users: { name: string; email: string; timestamp: number }[];
+  users: { name: string; email: string; babyName?: string; babyBirthDate?: string; timestamp: number }[];
   feedback: { id: string; message: string; email: string | null; timestamp: number }[];
-  stats: { totalUsers: number; totalFeedback: number };
+  stats: { totalUsers: number; totalFeedback: number; lifetimeRegistrations?: number; pushDevices?: number };
 } | null> {
   try {
     const resp = await fetch('/api/admin', {
