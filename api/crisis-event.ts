@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getRedis, cors, rateLimit } from './_shared';
+import { getRedis, cors, rateLimit } from './_shared.js';
 
 // Anonymous crisis event logger.
 // NO user content, NO identifiers — only an aggregate counter per severity.

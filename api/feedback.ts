@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getRedis, cors, rateLimit, verifyAdmin } from './_shared';
+import { getRedis, cors, rateLimit, verifyAdmin } from './_shared.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   cors(req, res);

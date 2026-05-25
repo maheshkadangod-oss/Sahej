@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getRedis, cors, rateLimit, verifyAdmin, ADMIN_EMAILS } from './_shared';
+import { getRedis, cors, rateLimit, verifyAdmin, ADMIN_EMAILS } from './_shared.js';
 
 // In-memory fallback when Redis is not configured
 const memoryTokens = new Map<string, string>();

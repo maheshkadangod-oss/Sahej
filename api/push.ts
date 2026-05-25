@@ -1,6 +1,77 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getRedis, cors, rateLimit } from './_shared';
-import { sendWebPush } from './_webpush';
+import crypto from 'node:crypto';
+import { getRedis, cors, rateLimit } from './_shared.js';
+
+// --- Dependency-free Web Push sender (inlined to avoid cross-file ESM resolution issues on
+//     Vercel). Implements RFC 8291 aes128gcm encryption + RFC 8292 VAPID using only node:crypto
+//     and global fetch — no third-party deps for the bundler to mangle. ---
+
+interface PushSub { endpoint: string; keys: { p256dh: string; auth: string } }
+interface VapidConfig { subject: string; publicKey: string; privateKey: string }
+
+const b64url = (b: Buffer) => b.toString('base64url');
+const fromB64url = (s: string) => Buffer.from(s, 'base64url');
+
+function hkdf(salt: Buffer, ikm: Buffer, info: Buffer, length: number): Buffer {
+  const prk = crypto.createHmac('sha256', salt).update(ikm).digest();
+  let t = Buffer.alloc(0);
+  let okm = Buffer.alloc(0);
+  let counter = 1;
+  while (okm.length < length) {
+    t = crypto.createHmac('sha256', prk).update(Buffer.concat([t, info, Buffer.from([counter])])).digest();
+    okm = Buffer.concat([okm, t]);
+    counter++;
+  }
+  return okm.subarray(0, length);
+}
+
+function vapidAuth(endpoint: string, vapid: VapidConfig): string {
+  const { host, protocol } = new URL(endpoint);
+  const header = b64url(Buffer.from(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
+  const payload = b64url(Buffer.from(JSON.stringify({
+    aud: `${protocol}//${host}`,
+    exp: Math.floor(Date.now() / 1000) + 12 * 3600,
+    sub: vapid.subject,
+  })));
+  const signingInput = `${header}.${payload}`;
+  const pub = fromB64url(vapid.publicKey);
+  const jwk = { kty: 'EC', crv: 'P-256', d: vapid.privateKey, x: b64url(pub.subarray(1, 33)), y: b64url(pub.subarray(33, 65)) };
+  const key = crypto.createPrivateKey({ key: jwk as crypto.JsonWebKeyInput['key'], format: 'jwk' });
+  const sig = crypto.sign('sha256', Buffer.from(signingInput), { key, dsaEncoding: 'ieee-p1363' });
+  return `vapid t=${signingInput}.${b64url(sig)}, k=${vapid.publicKey}`;
+}
+
+function encryptPayload(payload: Buffer, sub: PushSub): Buffer {
+  const uaPublic = fromB64url(sub.keys.p256dh);
+  const authSecret = fromB64url(sub.keys.auth);
+  const ecdh = crypto.createECDH('prime256v1');
+  ecdh.generateKeys();
+  const asPublic = ecdh.getPublicKey();
+  const ecdhSecret = ecdh.computeSecret(uaPublic);
+  const ikm = hkdf(authSecret, ecdhSecret, Buffer.concat([Buffer.from('WebPush: info\0'), uaPublic, asPublic]), 32);
+  const salt = crypto.randomBytes(16);
+  const cek = hkdf(salt, ikm, Buffer.from('Content-Encoding: aes128gcm\0'), 16);
+  const nonce = hkdf(salt, ikm, Buffer.from('Content-Encoding: nonce\0'), 12);
+  const cipher = crypto.createCipheriv('aes-128-gcm', cek, nonce);
+  const ciphertext = Buffer.concat([cipher.update(Buffer.concat([payload, Buffer.from([0x02])])), cipher.final(), cipher.getAuthTag()]);
+  const rs = Buffer.alloc(4); rs.writeUInt32BE(4096, 0);
+  return Buffer.concat([salt, rs, Buffer.from([asPublic.length]), asPublic, ciphertext]);
+}
+
+async function sendWebPush(sub: PushSub, payload: string, vapid: VapidConfig, ttl = 4 * 7 * 24 * 3600): Promise<number> {
+  const body = encryptPayload(Buffer.from(payload, 'utf8'), sub);
+  const resp = await fetch(sub.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Encoding': 'aes128gcm',
+      'Content-Type': 'application/octet-stream',
+      TTL: String(ttl),
+      Authorization: vapidAuth(sub.endpoint, vapid),
+    },
+    body,
+  });
+  return resp.status;
+}
 
 // Web Push backend (Phase 2).
 //   POST { action: 'subscribe', token, subscription, reminders }  → store this device's

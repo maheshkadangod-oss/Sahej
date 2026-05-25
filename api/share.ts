@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getRedis, cors, rateLimit } from './_shared';
+import { getRedis, cors, rateLimit } from './_shared.js';
 
 // In-memory fallback when Redis is not configured
 const memoryStore = new Map<string, { data: any; expiresAt: number }>();
