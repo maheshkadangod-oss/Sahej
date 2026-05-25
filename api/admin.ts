@@ -52,6 +52,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // One-time maintenance: remove test/seed entries (@example.com) created during setup,
+    // fix the lifetime counter, and drop known test push devices. Admin-token gated.
+    if (req.query.action === 'cleanup-test' && redis) {
+      const users = (await redis.get<any[]>('registered_users')) || [];
+      const kept = users.filter(u => !String(u.email || '').toLowerCase().endsWith('@example.com'));
+      const removedUsers = users.length - kept.length;
+      await redis.set('registered_users', kept);
+      if (removedUsers > 0) {
+        const count = (await redis.get<number>('registered_users_count')) || users.length;
+        await redis.set('registered_users_count', Math.max(0, count - removedUsers));
+      }
+      const testTokens = ['e2e-dev', 'audit-dev', 'test-device'];
+      let removedDevices = 0;
+      for (const t of testTokens) {
+        const existed = await redis.srem('push:tokens', t);
+        await redis.del(`push:data:${t}`);
+        removedDevices += existed ? 1 : 0;
+      }
+      return res.status(200).json({ ok: true, removedUsers, removedDevices, remainingUsers: kept.length });
+    }
+
     // Fetch data
     const users = redis ? (await redis.get<any[]>('registered_users') || []) : [];
     const feedback = redis ? (await redis.get<any[]>('feedback_items') || []) : [];
