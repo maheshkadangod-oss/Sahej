@@ -19,6 +19,13 @@
   --color-brand-lavender: #B8A9C9;
 }
 
+/* Shared easing curves — stronger than the built-in CSS easings, tuned for a calm,
+   gentle personality (soft ease-out + an iOS-style drawer curve for bottom sheets). */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 /* Dark mode overrides */
 html.dark {
   --color-brand-cream: #1A1C1A;
@@ -193,10 +200,15 @@ html.dark .markdown-body {
   animation: slide-up 0.3s ease-out;
 }
 
-/* Button press effect */
+/* Button press effect — instant, responsive press; smooth, snappy release.
+   A base transition makes the release ease back (previously it snapped), while the
+   :active state presses in quickly. Both use a strong ease-out curve. */
+.press-effect {
+  transition: transform 0.16s var(--ease-out);
+}
 .press-effect:active {
   transform: scale(0.96);
-  transition: transform 0.1s;
+  transition: transform 0.1s var(--ease-out);
 }
 
 /* Pill navigation for resource sub-tabs */
