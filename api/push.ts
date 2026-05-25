@@ -1,6 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import webpush from 'web-push';
 import { getRedis, cors, rateLimit } from './_shared';
+
+// web-push is loaded lazily inside the send path only — it's a CommonJS package and a top-level
+// ESM import can fail at runtime under Vercel's bundler. The subscribe/unsubscribe paths never
+// need it, so deferring keeps the whole function robust.
+async function getWebPush() {
+  const mod: any = await import('web-push');
+  return (mod.default ?? mod);
+}
 
 // Web Push backend (Phase 2).
 //   POST { action: 'subscribe', token, subscription, reminders }  → store this device's
@@ -16,14 +23,16 @@ import { getRedis, cors, rateLimit } from './_shared';
 
 interface StoredReminder { id: string; fireAt: number; title: string; body: string; sent?: boolean }
 
-function vapidReady(): boolean {
-  const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env;
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return false;
-  webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:hello@sahej.app', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-  return true;
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    return await route(req, res);
+  } catch (err) {
+    console.error('push handler error:', err);
+    return res.status(500).json({ error: 'push handler failed' });
+  }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+async function route(req: VercelRequest, res: VercelResponse) {
   cors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -71,7 +80,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (auth !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' });
     }
     if (!redis) return res.status(200).json({ sent: 0, note: 'no redis' });
-    if (!vapidReady()) return res.status(200).json({ sent: 0, note: 'vapid not configured' });
+
+    const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env;
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+      return res.status(200).json({ sent: 0, note: 'vapid not configured' });
+    }
+    const webpush = await getWebPush();
+    webpush.setVapidDetails(VAPID_SUBJECT || 'mailto:hello@sahej.app', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
     const now = Date.now();
     const tokens = (await redis.smembers('push:tokens')) as string[];
