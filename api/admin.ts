@@ -70,7 +70,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await redis.del(`push:data:${t}`);
         removedDevices += existed ? 1 : 0;
       }
-      return res.status(200).json({ ok: true, removedUsers, removedDevices, remainingUsers: kept.length });
+      // Also purge test visitor ids from the analytics sets + fix the session counter.
+      const today = new Date().toISOString().slice(0, 10);
+      const testDevices = ['verify-device-1', 'verify-device-2', 'e2e-dev', 'audit-dev', 'test-device'];
+      let removedVisitors = 0;
+      for (const d of testDevices) {
+        const existed = await redis.srem('visitors:all', d);
+        await redis.srem(`visitors:day:${today}`, d);
+        removedVisitors += existed ? 1 : 0;
+      }
+      if (removedVisitors > 0) {
+        const vt = (await redis.get<number>('visits:total')) || 0;
+        await redis.set('visits:total', Math.max(0, vt - removedVisitors));
+      }
+      return res.status(200).json({ ok: true, removedUsers, removedDevices, removedVisitors, remainingUsers: kept.length });
     }
 
     // Fetch data
