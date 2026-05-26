@@ -9,10 +9,13 @@ import {
   feedingStages, feedingGoldenRules, feedingDisclaimer, vaccineDisclaimer,
 } from '../data/babyCare';
 import type { useBabyCare, VaccineState } from '../hooks/useBabyCare';
+import type { useFeeding } from '../hooks/useFeeding';
+import FeedingCard from '../components/FeedingCard';
 
 interface BabyTabProps {
   babyName?: string;
   babyCare: ReturnType<typeof useBabyCare>;
+  feeding: ReturnType<typeof useFeeding>;
   onOpenSettings: () => void;
 }
 
@@ -25,7 +28,7 @@ const STATE_STYLE: Record<VaccineState, { label: string; cls: string }> = {
   upcoming:   { label: 'Upcoming',  cls: 'bg-black/5 text-brand-sage' },
 };
 
-export default React.memo(function BabyTab({ babyName, babyCare, onOpenSettings }: BabyTabProps) {
+export default React.memo(function BabyTab({ babyName, babyCare, feeding, onOpenSettings }: BabyTabProps) {
   const {
     hasBirthDate, ageMonths, reminders,
     currentFeedingStage,
@@ -152,6 +155,9 @@ export default React.memo(function BabyTab({ babyName, babyCare, onOpenSettings 
         </details>
         <p className="text-[10px] text-brand-sage/70 italic leading-relaxed">{feedingDisclaimer}</p>
       </section>
+
+      {/* Feeding — live timer, L/R, interval reminder, recent feeds, night summary */}
+      <FeedingCard feeding={feeding} />
 
       {/* Weight tracker */}
       <section className="glass-card rounded-3xl p-5 space-y-3">

@@ -83,6 +83,30 @@ export interface BabysLast {
   diaper: number | null;
 }
 
+export type FeedType = 'breast' | 'bottle';
+
+export interface FeedEntry {
+  id: string;
+  /** Start of the feed (epoch ms). */
+  timestamp: number;
+  type: FeedType;
+  /** Total feeding duration in seconds (sum of L+R for breast, or stopwatch for bottle). */
+  durationSec?: number;
+  /** Per-side duration in seconds (breast only). */
+  breastLeftSec?: number;
+  breastRightSec?: number;
+  /** Volume in millilitres (bottle only). */
+  volumeMl?: number;
+  notes?: string;
+}
+
+export interface FeedSettings {
+  /** Recurring reminder for newborns (every N hours since last feed). */
+  intervalEnabled: boolean;
+  /** Default 3 hours; clamped to 2–4 in the UI. */
+  intervalHours: number;
+}
+
 export interface WeightEntry {
   id: string;
   timestamp: number;

@@ -113,13 +113,24 @@ export function useBabyCare({ birthDate, babyName, showToast }: UseBabyCareArgs)
 
     for (const v of vaccineStatuses) {
       if (v.state === 'given' || !v.dueDate) continue;
-      const fireAt = v.dueDate.getTime() - THREE_DAYS;
-      if (fireAt > now) {
+      // Heads-up 3 days before the due date.
+      const aheadAt = v.dueDate.getTime() - THREE_DAYS;
+      if (aheadAt > now) {
         list.push({
-          id: `vac-${v.dose.id}`,
-          fireAt,
+          id: `vac-${v.dose.id}-ahead`,
+          fireAt: aheadAt,
           title: '💉 Vaccination coming up',
           body: `${name}'s ${v.dose.ageLabel} vaccines are due in ~3 days: ${v.dose.vaccines.join(', ')}`,
+        });
+      }
+      // And a "due today" nudge on the day-of.
+      const onDayAt = v.dueDate.getTime();
+      if (onDayAt > now) {
+        list.push({
+          id: `vac-${v.dose.id}-today`,
+          fireAt: onDayAt,
+          title: '💉 Vaccination due today',
+          body: `${name}'s ${v.dose.ageLabel} vaccines are due today: ${v.dose.vaccines.join(', ')}`,
         });
       }
     }

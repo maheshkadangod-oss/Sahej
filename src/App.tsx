@@ -11,6 +11,7 @@ import { useNutrition } from './hooks/useNutrition';
 import { useMoodInsights } from './hooks/useMoodInsights';
 import { useCompanion } from './hooks/useCompanion';
 import { useBabyCare } from './hooks/useBabyCare';
+import { useFeeding } from './hooks/useFeeding';
 import { t } from './strings';
 import { createShareLink } from './services/adminApi';
 import { notifyOverdueVaccines } from './services/notifications';
@@ -139,6 +140,12 @@ function MainApp() {
     showToast: data.showToast,
   });
 
+  const feeding = useFeeding({
+    babyName: data.userProfile?.babyName,
+    ageMonths: babyCare.ageMonths,
+    showToast: data.showToast,
+  });
+
   const onTalkToAsha = useCallback((message: string) => {
     data.setInputMessage(message);
     setActiveTab('chat');
@@ -204,11 +211,12 @@ function MainApp() {
   }, [babyCare.reminders, data.showWelcome]);
 
   // Phase 2: sync future-dated reminders to the push backend when notifications are on.
+  // Includes both vaccine reminders (babyCare) and the recurring feed-interval (feeding).
   // No-op if push isn't configured (VAPID unset) — Phase-1 in-app reminders still cover it.
   useEffect(() => {
     if (data.showWelcome || !data.notificationsOn || !isPushConfigured()) return;
-    void syncPushReminders(babyCare.pushReminders);
-  }, [data.notificationsOn, babyCare.pushReminders, data.showWelcome]);
+    void syncPushReminders([...babyCare.pushReminders, ...feeding.pushReminders]);
+  }, [data.notificationsOn, babyCare.pushReminders, feeding.pushReminders, data.showWelcome]);
 
   // Welcome screen
   if (data.showWelcome) {
@@ -365,6 +373,7 @@ function MainApp() {
                 <BabyTab
                   babyName={data.userProfile?.babyName}
                   babyCare={babyCare}
+                  feeding={feeding}
                   onOpenSettings={() => data.setShowSettings(true)}
                 />
               </Suspense>
