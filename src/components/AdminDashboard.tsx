@@ -22,6 +22,7 @@ type DashboardData = {
 
 export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [token, setToken] = useState(() => sessionStorage.getItem('sahej_admin_token') || '');
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,14 +36,15 @@ export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
   }, [show, token]);
 
   const handleLogin = async () => {
-    if (!email.trim()) return;
+    if (!email.trim() || !password) return;
     setLoading(true);
     setError('');
-    const t = await adminLogin(email.trim());
+    const t = await adminLogin(email.trim(), password);
     setLoading(false);
     if (t) {
       setToken(t);
       sessionStorage.setItem('sahej_admin_token', t);
+      setPassword(''); // don't keep the password in state once exchanged for a token
     } else {
       setError('Not authorized.');
     }
@@ -93,19 +95,28 @@ export default function AdminDashboard({ show, onClose }: AdminDashboardProps) {
 
             {/* Login */}
             {!loggedIn && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Admin email"
+                  autoComplete="username"
+                  className="w-full bg-white/60 dark:bg-white/5 border border-brand-clay/20 rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm min-h-[44px]"
+                />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Admin password"
+                  autoComplete="current-password"
                   onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                  className="w-full bg-white/60 dark:bg-white/5 border border-brand-clay/20 rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm"
+                  className="w-full bg-white/60 dark:bg-white/5 border border-brand-clay/20 rounded-2xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-brand-clay/30 text-sm min-h-[44px]"
                 />
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 <button
                   onClick={handleLogin}
-                  disabled={loading}
+                  disabled={loading || !email.trim() || !password}
                   className="w-full py-3 bg-brand-clay text-white rounded-2xl text-sm font-medium press-effect min-h-[44px] disabled:opacity-40"
                 >
                   {loading ? 'Logging in...' : 'Login'}

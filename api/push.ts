@@ -2,6 +2,22 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'node:crypto';
 import { getRedis, cors, rateLimit } from './_shared.js';
 
+// Only the major browser push services are accepted as subscription endpoints. Prevents
+// the subscribe endpoint from being abused as an open POST relay to arbitrary hosts.
+const PUSH_HOST_ALLOWLIST = [
+  'fcm.googleapis.com',          // Chrome / Android
+  'updates.push.services.mozilla.com', // Firefox
+  'web.push.apple.com',          // Safari (modern)
+  'api.push.apple.com',          // Safari (some routes)
+];
+function isAllowedPushEndpoint(endpoint: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(endpoint);
+    if (protocol !== 'https:') return false;
+    return PUSH_HOST_ALLOWLIST.some(h => hostname === h || hostname.endsWith('.notify.windows.com'));
+  } catch { return false; }
+}
+
 // --- Dependency-free Web Push sender (inlined to avoid cross-file ESM resolution issues on
 //     Vercel). Implements RFC 8291 aes128gcm encryption + RFC 8292 VAPID using only node:crypto
 //     and global fetch — no third-party deps for the bundler to mangle. ---
@@ -105,7 +121,7 @@ async function route(req: VercelRequest, res: VercelResponse) {
   // ---- Subscribe / unsubscribe ----
   if (req.method === 'POST') {
     const ip = (req.headers['x-real-ip'] as string) || 'unknown';
-    if (!rateLimit(ip, 20)) return res.status(429).json({ error: 'Too many requests' });
+    if (!(await rateLimit(redis, ip, 'push', 20))) return res.status(429).json({ error: 'Too many requests' });
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const { action, token } = body;
@@ -121,6 +137,11 @@ async function route(req: VercelRequest, res: VercelResponse) {
     if (action === 'subscribe') {
       const { subscription, reminders } = body;
       if (!subscription?.endpoint) return res.status(400).json({ error: 'subscription required' });
+      // Allow only well-known push services as the subscription endpoint, so this endpoint
+      // can't be abused as an open relay to arbitrary URLs.
+      if (!isAllowedPushEndpoint(subscription.endpoint)) {
+        return res.status(400).json({ error: 'unsupported push service' });
+      }
       const clean: StoredReminder[] = Array.isArray(reminders)
         ? reminders
             .filter((r: any) => r && r.id && typeof r.fireAt === 'number')
@@ -137,12 +158,12 @@ async function route(req: VercelRequest, res: VercelResponse) {
 
   // ---- Cron: send due reminders ----
   if (req.method === 'GET') {
-    // Protect the cron endpoint. Vercel Cron sends "Authorization: Bearer <CRON_SECRET>".
+    // Protect the cron endpoint. REQUIRED — without CRON_SECRET set this endpoint refuses
+    // to run, rather than being publicly callable. Vercel Cron sends the same header.
     const secret = process.env.CRON_SECRET;
-    if (secret) {
-      const auth = req.headers.authorization;
-      if (auth !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' });
-    }
+    if (!secret) return res.status(503).json({ error: 'Cron not configured' });
+    const auth = req.headers.authorization;
+    if (auth !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized' });
     if (!redis) return res.status(200).json({ sent: 0, note: 'no redis' });
 
     const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env;

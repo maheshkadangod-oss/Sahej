@@ -10,14 +10,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const ip = (req.headers['x-real-ip'] as string) || 'unknown';
-  if (!rateLimit(ip, 30)) return res.status(429).json({ error: 'Too many requests' });
+  const redis = getRedis();
+  if (!(await rateLimit(redis, ip, 'track', 30))) return res.status(429).json({ error: 'Too many requests' });
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const deviceId = String(body.deviceId || '').slice(0, 64);
     if (!deviceId) return res.status(400).json({ error: 'deviceId required' });
 
-    const redis = getRedis();
     if (!redis) return res.status(200).json({ ok: true }); // no DB → silently succeed
 
     const today = new Date().toISOString().slice(0, 10); // UTC YYYY-MM-DD

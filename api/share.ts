@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // GET /api/share?token=xxx — retrieve shared summary
   if (req.method === 'GET') {
-    if (!rateLimit(ip, 30)) return res.status(429).json({ error: 'Too many requests' });
+    if (!(await rateLimit(redis, ip, 'share-read', 30))) return res.status(429).json({ error: 'Too many requests' });
 
     const token = req.query.token;
     if (!token || typeof token !== 'string') {
@@ -44,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // POST /api/share — create a new share link
   if (req.method === 'POST') {
-    if (!rateLimit(ip, 5)) return res.status(429).json({ error: 'Too many requests' });
+    if (!(await rateLimit(redis, ip, 'share-create', 5))) return res.status(429).json({ error: 'Too many requests' });
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const { displayName, moodSummary } = body;

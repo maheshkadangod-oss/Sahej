@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // POST = user submitting feedback
   if (req.method === 'POST') {
     const ip = (req.headers['x-real-ip'] as string) || 'unknown';
-    if (!rateLimit(ip, 3)) return res.status(429).json({ error: 'Too many requests' });
+    if (!(await rateLimit(redis, ip, 'feedback', 3))) return res.status(429).json({ error: 'Too many requests' });
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const { message, email } = body;

@@ -11,7 +11,9 @@
   --font-sans: "Inter", sans-serif;
 
   --color-brand-cream: #FDF8F4;
-  --color-brand-sage: #7D8C7C;
+  /* Sage is used heavily as text on cream. Darkened from #7D8C7C (~3.2:1, fails WCAG AA)
+     to clear 4.5:1 contrast on cream backgrounds while preserving the muted earthy character. */
+  --color-brand-sage: #5F6E5E;
   --color-brand-clay: #C8956C;
   --color-brand-rose: #E8B4B8;
   --color-brand-gold: #E9C46A;

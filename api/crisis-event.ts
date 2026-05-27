@@ -12,14 +12,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const ip = (req.headers['x-real-ip'] as string) || 'unknown';
+  const redis = getRedis();
   // Very permissive — this endpoint is a safety counter; we want to record always
-  if (!rateLimit(ip, 30)) return res.status(200).json({ ok: true });
+  if (!(await rateLimit(redis, ip, 'crisis', 30))) return res.status(200).json({ ok: true });
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
   const severity = body.severity === 'crisis' ? 'crisis' : body.severity === 'watchful' ? 'watchful' : null;
   if (!severity) return res.status(400).json({ error: 'severity required' });
 
-  const redis = getRedis();
   if (!redis) return res.status(200).json({ ok: true });
 
   try {

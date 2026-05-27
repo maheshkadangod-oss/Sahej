@@ -51,12 +51,12 @@ export async function submitFeedback(message: string, email?: string): Promise<b
 }
 
 // Admin login
-export async function adminLogin(email: string): Promise<string | null> {
+export async function adminLogin(email: string, password: string): Promise<string | null> {
   try {
     const resp = await fetch('/api/admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, password }),
     });
     if (!resp.ok) return null;
     const data = await resp.json();

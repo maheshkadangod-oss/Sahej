@@ -86,8 +86,8 @@ export default React.memo(function MoodTab({
           <ResponsiveContainer width="100%" height="80%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={darkMode ? '#333' : '#E5E7EB'} />
-              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#7D8C7C' }} dy={10} />
-              <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#7D8C7C' }} />
+              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: darkMode ? '#9BAF9A' : '#5F6E5E' }} dy={10} />
+              <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: darkMode ? '#9BAF9A' : '#5F6E5E' }} />
               <Tooltip contentStyle={{ backgroundColor: darkMode ? '#2D312E' : '#FDF8F4', borderRadius: '12px', border: '1px solid #C8956C', fontSize: '12px', color: darkMode ? '#E8E5E0' : '#2D312E' }} />
               <Line type="monotone" dataKey="level" stroke="#C8956C" strokeWidth={3} dot={{ r: 4, fill: '#C8956C', strokeWidth: 2, stroke: darkMode ? '#2D312E' : '#FDF8F4' }} activeDot={{ r: 6 }} animationDuration={1200} animationEasing="ease-out" />
             </LineChart>

@@ -41,7 +41,7 @@ export default function Sidebar({
               onClick={() => setActiveTab(tab)}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-colors press-effect text-left',
+                'flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-colors press-effect text-left min-h-[44px]',
                 active ? 'bg-brand-clay text-white' : 'text-brand-ink/70 hover:bg-black/5',
               )}
             >

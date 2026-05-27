@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
+import { cors, getRedis, rateLimit } from './_shared.js';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
 
 let ai: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI {
@@ -13,51 +13,21 @@ function getAI(): GoogleGenAI {
   return ai;
 }
 
-// Rate limiting: in-memory per-IP, 20 requests/minute, with cleanup
-const rateLimit = new Map<string, { count: number; resetAt: number }>();
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-
-  // Purge expired entries when map grows large
-  if (rateLimit.size > 500) {
-    for (const [key, entry] of rateLimit) {
-      if (now > entry.resetAt) rateLimit.delete(key);
-    }
-  }
-
-  const entry = rateLimit.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimit.set(ip, { count: 1, resetAt: now + 60_000 });
-    return true;
-  }
-  if (entry.count >= 20) return false;
-  entry.count++;
-  return true;
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS — restrict to allowed origins, fall back to same-origin only
-  const origin = req.headers.origin || '';
-  if (ALLOWED_ORIGINS.length > 0 && ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (ALLOWED_ORIGINS.length === 0) {
-    // No whitelist configured — allow all (dev/initial setup)
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  cors(req, res);
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   if (!GEMINI_API_KEY) {
-    return res.status(503).json({ error: 'API not configured. Use client-side key in Settings.' });
+    return res.status(503).json({ error: 'AI not configured.' });
   }
 
   // Rate limit — use x-real-ip (set by Vercel) to prevent x-forwarded-for spoofing
   const ip = (req.headers['x-real-ip'] as string)
     || (req.headers['x-forwarded-for'] as string)?.split(',')[0]
     || 'unknown';
-  if (!checkRateLimit(ip)) {
+  const redis = getRedis();
+  if (!(await rateLimit(redis, ip, 'gemini', 20))) {
     return res.status(429).json({ error: 'Too many requests. Try again in a minute.' });
   }
 

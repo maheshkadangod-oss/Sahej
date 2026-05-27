@@ -1,5 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { timingSafeEqual } from 'node:crypto';
 import { getRedis, cors, rateLimit, verifyAdmin, ADMIN_EMAILS } from './_shared.js';
+
+/** Constant-time string comparison — prevents timing attacks on the admin password. */
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a, 'utf8');
+  const bb = Buffer.from(b, 'utf8');
+  if (ab.length !== bb.length) return false;
+  try { return timingSafeEqual(ab, bb); } catch { return false; }
+}
 
 // In-memory fallback when Redis is not configured
 const memoryTokens = new Map<string, string>();
@@ -13,22 +22,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // POST = login (get token)
   if (req.method === 'POST') {
     const ip = (req.headers['x-real-ip'] as string) || 'unknown';
-    if (!rateLimit(ip, 5)) return res.status(429).json({ error: 'Too many attempts' });
+    if (!(await rateLimit(redis, ip, 'admin-login', 5))) return res.status(429).json({ error: 'Too many attempts' });
+
+    // Admin password must be configured server-side. If missing, refuse to issue tokens
+    // — locking admin out is safer than the previous email-only flow.
+    const adminPw = process.env.ADMIN_PASSWORD;
+    if (!adminPw) return res.status(503).json({ error: 'Admin login is not configured.' });
 
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const email = body.email;
-    if (!email || !ADMIN_EMAILS.includes(String(email).toLowerCase().trim())) {
-      return res.status(403).json({ error: 'Not authorized' });
-    }
+    const email = String(body?.email || '').toLowerCase().trim();
+    const password = String(body?.password || '');
+    const emailOk = email && ADMIN_EMAILS.includes(email);
+    const pwOk = safeEqual(password, adminPw);
+    // Single error for either failure so an attacker can't learn which is wrong.
+    if (!emailOk || !pwOk) return res.status(403).json({ error: 'Not authorized' });
 
     const token = crypto.randomUUID();
-    const normalizedEmail = String(email).toLowerCase().trim();
-
     if (redis) {
-      await redis.set(`admin_session_${token}`, normalizedEmail, { ex: 7 * 24 * 3600 });
+      await redis.set(`admin_session_${token}`, email, { ex: 7 * 24 * 3600 });
     } else {
       // Fallback: store in memory (lost on cold start, but works for testing)
-      memoryTokens.set(token, normalizedEmail);
+      memoryTokens.set(token, email);
     }
 
     return res.status(200).json({ token });
