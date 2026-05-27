@@ -77,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const count = (await redis.get<number>('registered_users_count')) || users.length;
         await redis.set('registered_users_count', Math.max(0, count - removedUsers));
       }
-      const testTokens = ['e2e-dev', 'audit-dev', 'test-device'];
+      const testTokens = ['e2e-dev', 'audit-dev', 'test-device', 'hardening-test'];
       let removedDevices = 0;
       for (const t of testTokens) {
         const existed = await redis.srem('push:tokens', t);
