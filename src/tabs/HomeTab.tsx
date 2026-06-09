@@ -190,18 +190,14 @@ export default function HomeTab({
       </motion.button>
       </motion.div>
 
-      {/* Quick State Actions — tap how you feel, get an immediate micro-activity */}
-      <motion.div variants={sectionVariant}>
-        <QuickStateActions dayOfYear={data.dayOfYear} />
-      </motion.div>
-
-      {/* Daily Reassurance — single rotating card */}
+      {/* Daily Reassurance — single rotating card, full-width banner above the dashboard grid */}
       <motion.div variants={sectionVariant}>
         <ReassuranceCard dayOfYear={data.dayOfYear} />
       </motion.div>
 
-      {/* Companion — below core CTAs */}
-      <motion.div variants={sectionVariant}>
+      {/* Dashboard pair on desktop — Quick State + Companion sit side-by-side at lg */}
+      <motion.div variants={sectionVariant} className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-5 lg:items-start">
+        <QuickStateActions dayOfYear={data.dayOfYear} />
         <CompanionWidget {...companion} setActiveTab={setActiveTab} />
       </motion.div>
 
