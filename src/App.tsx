@@ -250,7 +250,7 @@ function MainApp() {
       <div aria-hidden="true" className="fixed bottom-[-5%] left-[-5%] w-56 h-56 lg:w-[26rem] lg:h-[26rem] bg-brand-sage/10 rounded-full blur-3xl pointer-events-none ambient-blob-2" />
       <div aria-hidden="true" className="fixed top-[40%] left-[50%] w-40 h-40 bg-brand-gold/8 rounded-full blur-3xl pointer-events-none ambient-blob-1" />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl">
+      <div className="relative z-10 flex w-full">
         {/* Desktop sidebar navigation */}
         <Sidebar
           activeTab={activeTab}
@@ -278,9 +278,10 @@ function MainApp() {
             </button>
           </header>
 
-          {/* Main content */}
-          <main id="main-content" ref={data.mainRef} className="flex-1 overflow-y-auto px-6 pb-28 lg:px-10 lg:pt-10 lg:pb-12 z-10 custom-scrollbar">
-            <div className="lg:max-w-2xl lg:mx-auto w-full">
+          {/* Main content — sidebar at the left edge, content uses the remaining space generously
+              while staying readable (cap stops individual cards from becoming awkwardly large). */}
+          <main id="main-content" ref={data.mainRef} className="flex-1 overflow-y-auto px-6 pb-28 lg:px-12 lg:pt-10 lg:pb-12 z-10 custom-scrollbar">
+            <div className="w-full lg:max-w-4xl lg:mx-auto">
               <ErrorBoundary>
                 <AnimatePresence mode="wait">
             {activeTab === 'home' && (
