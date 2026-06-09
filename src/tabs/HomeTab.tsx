@@ -158,7 +158,7 @@ export default function HomeTab({
               whileTap={{ scale: 0.88 }}
               transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               aria-label={moodLabel(level)}
-              className="flex-1 aspect-square rounded-2xl flex items-center justify-center text-2xl hover:bg-brand-clay/10 active:bg-brand-clay/20 transition-colors border border-brand-clay/10 min-w-[44px] min-h-[44px]"
+              className="flex-1 aspect-square lg:aspect-auto lg:h-20 rounded-2xl flex items-center justify-center text-2xl lg:text-3xl hover:bg-brand-clay/10 active:bg-brand-clay/20 transition-colors border border-brand-clay/10 min-w-[44px] min-h-[44px]"
             >
               {level === 1 ? '😔' : level === 2 ? '😕' : level === 3 ? '😐' : level === 4 ? '🙂' : '✨'}
             </motion.button>
@@ -167,9 +167,9 @@ export default function HomeTab({
         <p className="text-center text-xs text-brand-sage mt-4 italic">{t('logHeart')}</p>
       </motion.section>
 
-      {/* CORE 2: Talk to Asha CTA */}
+      {/* CORE 2 + 3: Talk to Asha + Emergency — pair side-by-side on desktop */}
+      <motion.div variants={sectionVariant} className="grid grid-cols-1 lg:grid-cols-2 gap-3">
       <motion.button
-        variants={sectionVariant}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.97 }}
         onClick={() => setActiveTab('chat')}
@@ -179,17 +179,16 @@ export default function HomeTab({
         Talk to Asha
       </motion.button>
 
-      {/* CORE 3: Emergency Help — prominent, always visible */}
       <motion.button
-        variants={sectionVariant}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.97 }}
         onClick={() => setActiveTab('help')}
-        className="w-full py-4 bg-brand-rose text-white rounded-2xl text-base font-medium flex items-center justify-center gap-2.5 min-h-[56px] shadow-md press-effect"
+        className="w-full py-4 bg-brand-rose text-white rounded-3xl text-base font-medium flex items-center justify-center gap-2.5 min-h-[56px] shadow-md press-effect"
       >
         <Phone className="w-5 h-5" />
         Emergency Helplines
       </motion.button>
+      </motion.div>
 
       {/* Quick State Actions — tap how you feel, get an immediate micro-activity */}
       <motion.div variants={sectionVariant}>
