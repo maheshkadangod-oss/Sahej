@@ -7,6 +7,7 @@ import { cn } from '../lib/cn';
 import { t } from '../strings';
 import { isNotificationSupported } from '../services/notifications';
 import { useOnline } from '../hooks/useOnline';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import type { TrustedContact } from '../types';
 
 interface SettingsModalProps {
@@ -49,7 +50,9 @@ export default function SettingsModal({
   const [contactPhone, setContactPhone] = useState('');
   const [versionTaps, setVersionTaps] = useState(0);
   const [addressInput, setAddressInput] = useState(addressAs);
+  const [showInstallSteps, setShowInstallSteps] = useState(false);
   const online = useOnline();
+  const install = useInstallPrompt();
 
   const handleVersionTap = () => {
     const next = versionTaps + 1;
@@ -317,6 +320,29 @@ export default function SettingsModal({
               </div>
 
               <div className="border-t border-brand-clay/10" />
+
+              {/* Install Sahej — hidden once running as an installed app */}
+              {!install.isInstalled && (
+                <>
+                  <button
+                    onClick={async () => {
+                      if (install.canPromptNative) await install.promptInstall();
+                      else setShowInstallSteps(s => !s);
+                    }}
+                    className="w-full py-3 bg-brand-lavender/15 text-brand-ink rounded-2xl text-sm font-medium press-effect min-h-[44px]"
+                  >
+                    📲 Install Sahej on this device
+                    <span className="block text-[10px] text-brand-sage font-normal mt-0.5">Works offline · opens instantly · no app store needed</span>
+                  </button>
+                  {showInstallSteps && (
+                    <p className="text-[11px] text-brand-sage bg-white/40 dark:bg-white/5 rounded-xl p-3 leading-relaxed">
+                      {install.isIOS
+                        ? 'In Safari: tap the Share button (the square with an arrow), then choose "Add to Home Screen", then Add.'
+                        : 'In your browser\'s menu, look for "Install app" or "Add to Home Screen". In Chrome and Edge it\'s also the install icon at the right end of the address bar.'}
+                    </p>
+                  )}
+                </>
+              )}
 
               {/* Emotional check-in (EPDS) */}
               <button

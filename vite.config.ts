@@ -15,6 +15,9 @@ export default defineConfig({
       // Precache everything in dist so first-offline-visit works, not just warm-cache reloads.
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,woff2,png,webmanifest}'],
+        // Marketing-only images (social card, install-dialog screenshots) don't belong in the
+        // offline cache — they're never shown inside the app.
+        globIgnores: ['**/og.png', '**/screenshot-*.png'],
         // Inject our custom push + notificationclick handlers into the generated SW.
         // Keeps the Workbox precache/runtime-caching intact while adding Web Push support.
         // push-sw.js is also precached (default glob) so importScripts succeeds even on an
@@ -71,14 +74,17 @@ export default defineConfig({
           },
         ],
       },
-      includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'],
+      includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'],
       manifest: {
+        id: '/',
         name: 'Sahej - Postpartum Wellness',
         short_name: 'Sahej',
         description: 'A gentle companion for postpartum wellness — mood tracking, journaling, EPDS screening, and AI support.',
         start_url: '/',
         scope: '/',
         display: 'standalone',
+        // Prefer a real window on desktop installs; fall back to standalone.
+        display_override: ['standalone', 'minimal-ui'],
         orientation: 'portrait',
         background_color: '#FDF8F4',
         theme_color: '#FDF8F4',
@@ -88,6 +94,17 @@ export default defineConfig({
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+        ],
+        // Rich install dialog on Android / desktop Chrome & Edge.
+        screenshots: [
+          { src: '/screenshot-narrow.png', sizes: '500x1083', type: 'image/png', form_factor: 'narrow', label: 'Sahej — gentle postpartum companion' },
+          { src: '/screenshot-wide.png', sizes: '1280x800', type: 'image/png', form_factor: 'wide', label: 'Sahej on desktop' },
+        ],
+        // Long-press the app icon (Android / Windows taskbar) → jump straight in.
+        shortcuts: [
+          { name: 'Talk to Asha', url: '/?tab=chat', icons: [{ src: '/icon-192.png', sizes: '192x192' }] },
+          { name: 'Baby care', url: '/?tab=baby', icons: [{ src: '/icon-192.png', sizes: '192x192' }] },
+          { name: 'Mood check-in', url: '/?tab=home', icons: [{ src: '/icon-192.png', sizes: '192x192' }] },
         ],
       },
     }),

@@ -27,6 +27,7 @@ import Sidebar from './components/Sidebar';
 import Toast from './components/Toast';
 import MoodNoteModal from './components/MoodNoteModal';
 import { OfflineBanner } from './components/OfflineBanner';
+import InstallBanner from './components/InstallBanner';
 import HomeTab from './tabs/HomeTab';
 
 // Lazy loaded components
@@ -93,8 +94,18 @@ export default function App() {
   );
 }
 
+// Initial tab from ?tab= — used by the PWA manifest shortcuts (long-press app icon →
+// "Talk to Asha" / "Baby care"), and harmless to share as a plain link.
+function initialTabFromURL(): Tab {
+  try {
+    const t = new URLSearchParams(window.location.search).get('tab');
+    if (t && ['home', 'mood', 'memory', 'chat', 'help', 'baby'].includes(t)) return t as Tab;
+  } catch { /* ignore malformed URLs */ }
+  return 'home';
+}
+
 function MainApp() {
-  const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [activeTab, setActiveTab] = useState<Tab>(initialTabFromURL);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showEPDS, setShowEPDS] = useState(false);
@@ -305,6 +316,7 @@ function MainApp() {
             <div className="w-full lg:max-w-4xl lg:mx-auto">
               <ErrorBoundary>
                 <AnimatePresence mode="wait">
+            {activeTab === 'home' && <InstallBanner />}
             {activeTab === 'home' && (
               <HomeTab
                 data={data}
