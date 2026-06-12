@@ -55,7 +55,22 @@ export default function WelcomeScreen({
 
         <p className="text-brand-sage text-sm mb-1">{t('welcomeTo')}</p>
         <h1 className="text-4xl font-serif font-semibold text-brand-ink mb-2">{t('appName')}</h1>
-        <p className="text-brand-sage text-sm italic mb-10">{t('loginDesc')}</p>
+        <p className="text-brand-sage text-sm italic mb-6">{t('loginDesc')}</p>
+
+        {/* What you get — a visitor should know what Sahej is before we ask for her details */}
+        <div className="text-left bg-white/40 border border-brand-clay/10 rounded-2xl px-5 py-4 mb-8 space-y-2.5">
+          {[
+            ['💬', 'Asha — a caring companion to talk to, any hour'],
+            ['🫶', 'Mood check-ins and a doctor-grade wellbeing screen'],
+            ['🍼', "Baby's feeds, growth and vaccine reminders"],
+            ['🔒', 'Private by design — your entries stay on your phone'],
+          ].map(([emoji, text]) => (
+            <p key={text} className="text-[13px] text-brand-ink/80 flex items-start gap-2.5">
+              <span className="shrink-0">{emoji}</span>
+              <span>{text}</span>
+            </p>
+          ))}
+        </div>
 
         <div className="space-y-4 mb-8">
           <input
@@ -116,6 +131,8 @@ export default function WelcomeScreen({
 
         <p className="text-[11px] text-brand-sage/80">
           {canSubmit ? 'Your details stay private — used only to personalize Sahej.' : 'Name and email are required to continue.'}
+          {' '}
+          <a href="/privacy" className="underline underline-offset-2 text-brand-clay">Privacy policy</a>
         </p>
       </motion.div>
     </div>

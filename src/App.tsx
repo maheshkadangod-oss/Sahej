@@ -13,9 +13,9 @@ import { useCompanion } from './hooks/useCompanion';
 import { useBabyCare } from './hooks/useBabyCare';
 import { useFeeding } from './hooks/useFeeding';
 import { t } from './strings';
-import { createShareLink } from './services/adminApi';
+import { createShareLink, deleteAccount } from './services/adminApi';
 import { notifyOverdueVaccines } from './services/notifications';
-import { syncPushReminders, isPushConfigured } from './services/push';
+import { syncPushReminders, unsyncPush, isPushConfigured } from './services/push';
 import { format } from 'date-fns';
 import { microAchievements } from './data/reassurances';
 import type { Tab } from './types';
@@ -42,6 +42,7 @@ const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 const ShareView = React.lazy(() => import('./components/ShareView'));
 const EPDSScreening = React.lazy(() => import('./components/EPDSScreening'));
 const PrintableReport = React.lazy(() => import('./components/PrintableReport'));
+const PrivacyView = React.lazy(() => import('./components/PrivacyView'));
 
 function LoadingFallback() {
   return (
@@ -70,6 +71,15 @@ export default function App() {
     return (
       <Suspense fallback={<LoadingFallback />}>
         <PrintableReport />
+      </Suspense>
+    );
+  }
+  // Privacy policy route — public, no app state needed
+  const isPrivacyRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/privacy');
+  if (isPrivacyRoute) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <PrivacyView />
       </Suspense>
     );
   }
@@ -150,6 +160,17 @@ function MainApp() {
     data.setInputMessage(message);
     setActiveTab('chat');
   }, [data.setInputMessage]);
+
+  // Full erasure: server registration record + push subscription + everything on-device.
+  const handleDeleteMyData = useCallback(async () => {
+    const email = data.userProfile?.email
+      || window.prompt('To remove your sign-up record from our servers, confirm the email you signed up with:')?.trim()
+      || '';
+    data.showToast('Deleting your data…');
+    if (email) await deleteAccount(email);     // best-effort — server record
+    await unsyncPush().catch(() => {});        // best-effort — push subscription
+    data.handleResetApp();                     // wipes device + reloads
+  }, [data.userProfile?.email, data.showToast, data.handleResetApp]);
 
   const handleShareWithFamily = useCallback(async () => {
     const displayName = data.displayName || 'Mama';
@@ -430,6 +451,7 @@ function MainApp() {
           onStartEPDS={() => setShowEPDS(true)}
           addressAs={data.userProfile?.addressAs || ''}
           onUpdateAddressAs={data.handleUpdateAddressAs}
+          onDeleteMyData={handleDeleteMyData}
         />
       </Suspense>
 

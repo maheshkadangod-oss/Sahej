@@ -20,6 +20,8 @@ export interface UserProfile {
   /** What the user wants Asha (and the home greeting) to call them. Falls back to a warm
    *  default ("wonderful mom") when unset. See src/utils/sanitizeName.ts. */
   addressAs?: string;
+  /** Sign-up email, kept locally so "Delete my data" can remove the server record. */
+  email?: string;
 }
 
 export interface SleepEntry {

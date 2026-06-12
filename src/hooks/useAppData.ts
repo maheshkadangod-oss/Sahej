@@ -265,6 +265,8 @@ export function useAppData() {
     const profile: UserProfile = { name: welcomeName.trim() || 'Mama' };
     if (welcomeBabyName.trim()) profile.babyName = welcomeBabyName.trim();
     if (welcomeBabyBirth) profile.birthDate = welcomeBabyBirth;
+    // Keep the sign-up email locally so "Delete my data" can remove the server record later.
+    if (welcomeEmail.trim()) profile.email = welcomeEmail.trim().toLowerCase();
     // Term of address: keep it only if it passes the abuse filter. If empty or rejected,
     // we store nothing and resolveAddress() falls back to her name or "wonderful mom".
     const addr = sanitizeAddress(welcomeAddressAs);
@@ -276,7 +278,7 @@ export function useAppData() {
     setUserProfile(profile);
     localStorage.setItem('sahej_user_profile', JSON.stringify(profile));
     setShowWelcome(false);
-  }, [welcomeName, welcomeAddressAs, welcomeBabyName, welcomeBabyBirth, showToast]);
+  }, [welcomeName, welcomeAddressAs, welcomeBabyName, welcomeBabyBirth, welcomeEmail, showToast]);
 
   // Update the term of address from Settings at any time. Validates against the abuse filter;
   // an empty value clears it (reverting to the warm default). Returns whether it was accepted
@@ -636,17 +638,14 @@ export function useAppData() {
   }, [setMoods, setMemories, setGratitudeEntries, setSleepLog, setChatHistory, setBabysLast, setKegelLog, setWaterLog, setJournalEntries, setBabyMilestones, showToast]);
 
   const handleResetApp = useCallback(() => {
-    const keys = [
-      'sahej_moods', 'sahej_memories', 'sahej_chat_history', 'sahej_checklist', 'sahej_checklist_date',
-      'sahej_babys_last', 'sahej_gratitude', 'sahej_sleep', 'sahej_last_export', 'sahej_last_vitamin_reminder',
-      'sahej_dark_mode', 'sahej_notifications_enabled', 'sahej_user_profile', 'sahej_api_key',
-      'sahej_backup_dismissed', 'sahej_kegel', 'sahej_water', 'sahej_journal', 'sahej_baby_milestones',
-      'sahej_earned_badges', 'sahej_active_quest', 'sahej_reset_completions', 'sahej_legacy_letters',
-      'sahej_nutrition_profile', 'sahej_meal_suggestions', 'sahej_mood_insights',
-      'sahej_companion', 'sahej_trusted_contacts', 'sahej_companion_xp_snap',
-      'sahej_last_microachievement'
-    ];
-    keys.forEach(k => localStorage.removeItem(k));
+    // Wipe every Sahej key by prefix — a fixed list silently misses newer features
+    // (baby feeding/weight/vaccine logs were absent from the old list).
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('sahej_')) toRemove.push(k);
+    }
+    toRemove.forEach(k => localStorage.removeItem(k));
     window.location.reload();
   }, []);
 

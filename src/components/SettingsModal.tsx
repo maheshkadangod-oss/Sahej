@@ -28,6 +28,7 @@ interface SettingsModalProps {
   onStartEPDS: () => void;
   addressAs: string;
   onUpdateAddressAs: (raw: string) => boolean;
+  onDeleteMyData: () => void;
 }
 
 export default function SettingsModal({
@@ -40,6 +41,7 @@ export default function SettingsModal({
   trustedContacts, addTrustedContact, removeTrustedContact,
   onShowFeedback, onShowAdmin, onShareWithFamily, onStartEPDS,
   addressAs, onUpdateAddressAs,
+  onDeleteMyData,
 }: SettingsModalProps) {
   const importFileRef = useRef<HTMLInputElement>(null);
   const [showAddContact, setShowAddContact] = useState(false);
@@ -284,6 +286,22 @@ export default function SettingsModal({
                 </div>
               </button>
 
+              {/* Delete my data — full erasure: server record + push subscription + device */}
+              <button
+                onClick={() => {
+                  if (window.confirm('Delete everything? This removes your sign-up record from our servers, stops notifications, and erases all data on this device. It cannot be undone.')) {
+                    onDeleteMyData();
+                  }
+                }}
+                className="w-full flex items-center gap-3 py-3 px-1 hover:bg-red-50 active:bg-red-100 rounded-xl transition-colors min-h-[48px]"
+              >
+                <Trash2 className="w-4 h-4 text-red-400" />
+                <div className="text-left">
+                  <span className="text-sm font-medium text-red-500">Delete my data</span>
+                  <p className="text-[10px] text-brand-sage">Erase everything — on this device and on our servers</p>
+                </div>
+              </button>
+
               <div className="border-t border-brand-clay/10" />
 
               {/* Disclaimer */}
@@ -293,6 +311,9 @@ export default function SettingsModal({
                   {t('disclaimer')}
                 </h3>
                 <p className="text-[11px] text-brand-sage leading-relaxed">{t('disclaimerText')}</p>
+                <a href="/privacy" className="inline-block text-[11px] text-brand-clay underline underline-offset-2 py-1">
+                  Read our privacy policy
+                </a>
               </div>
 
               <div className="border-t border-brand-clay/10" />
@@ -346,7 +367,7 @@ export default function SettingsModal({
                   onClick={handleVersionTap}
                   className="text-[10px] text-brand-sage cursor-default select-none"
                 >
-                  v1.3.0 &middot; Made with love for every mama
+                  v1.4.0 &middot; Made with love for every mama
                 </p>
               </div>
             </div>

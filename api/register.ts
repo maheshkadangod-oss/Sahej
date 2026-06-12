@@ -17,6 +17,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Valid email required' });
     }
 
+    // Erasure request (DPDP right): remove the registration record for this email.
+    // Keyed by email only — the stored record is just a contact entry (no health data lives
+    // server-side), so the worst-case abuse is removing someone from a mailing list. Tightly
+    // rate-limited above. Lifetime sign-up counter is intentionally left untouched.
+    if (body.action === 'delete') {
+      if (!redis) return res.status(200).json({ success: true });
+      const normalized = email.toLowerCase().trim().slice(0, 100);
+      const all = (await redis.get<any[]>('registered_users')) || [];
+      const kept = all.filter((u: any) => u.email !== normalized);
+      await redis.set('registered_users', kept);
+      return res.status(200).json({ success: true, removed: all.length - kept.length });
+    }
+
     if (!redis) return res.status(200).json({ success: true }); // No DB configured, silently succeed
 
     const normalizedEmail = email.toLowerCase().trim().slice(0, 100);

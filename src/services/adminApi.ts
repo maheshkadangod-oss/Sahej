@@ -36,6 +36,20 @@ export async function registerUser(
   }
 }
 
+// Erasure request — removes the server-side registration record for this email.
+export async function deleteAccount(email: string): Promise<boolean> {
+  try {
+    const resp = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', email }),
+    });
+    return resp.ok;
+  } catch {
+    return false;
+  }
+}
+
 // Feedback
 export async function submitFeedback(message: string, email?: string): Promise<boolean> {
   try {
