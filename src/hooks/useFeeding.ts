@@ -80,33 +80,19 @@ export function useFeeding({ babyName, ageMonths, showToast }: UseFeedingArgs) {
     };
   };
 
+  // Live stopwatch values — computed fresh on EVERY render, deliberately NOT memoized.
+  // The tick effect re-renders once a second, but `active`'s identity doesn't change on a
+  // tick, so a useMemo keyed on it would return a cached value and freeze the display.
+  const liveSegmentSec =
+    active && !active.paused && active.segmentStartedAt != null
+      ? Math.max(0, Math.floor((Date.now() - active.segmentStartedAt) / 1000))
+      : 0;
   /** Total elapsed seconds of the current feed (accumulated + the live segment). */
-  const elapsedSec = useMemo(() => {
-    if (!active) return 0;
-    const base = active.leftSec + active.rightSec + active.noneSec;
-    if (active.paused || active.segmentStartedAt == null) return base;
-    const live = Math.max(0, Math.floor((Date.now() - active.segmentStartedAt) / 1000));
-    return base + live;
-    // re-evaluated each render — the tick effect above keeps renders flowing.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, active?.leftSec, active?.rightSec, active?.noneSec, active?.paused, active?.segmentStartedAt]);
-
-  const liveLeftSec = useMemo(() => {
-    if (!active) return 0;
-    if (active.side === 'left' && !active.paused && active.segmentStartedAt != null) {
-      return active.leftSec + Math.max(0, Math.floor((Date.now() - active.segmentStartedAt) / 1000));
-    }
-    return active.leftSec;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active]);
-  const liveRightSec = useMemo(() => {
-    if (!active) return 0;
-    if (active.side === 'right' && !active.paused && active.segmentStartedAt != null) {
-      return active.rightSec + Math.max(0, Math.floor((Date.now() - active.segmentStartedAt) / 1000));
-    }
-    return active.rightSec;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active]);
+  const elapsedSec = active
+    ? active.leftSec + active.rightSec + active.noneSec + liveSegmentSec
+    : 0;
+  const liveLeftSec = active ? active.leftSec + (active.side === 'left' ? liveSegmentSec : 0) : 0;
+  const liveRightSec = active ? active.rightSec + (active.side === 'right' ? liveSegmentSec : 0) : 0;
 
   const startTimer = useCallback((initialSide: 'left' | 'right' | 'none' = 'none') => {
     const now = Date.now();

@@ -174,9 +174,14 @@ function MainApp() {
 
   // Full erasure: server registration record + push subscription + everything on-device.
   const handleDeleteMyData = useCallback(async () => {
-    const email = data.userProfile?.email
-      || window.prompt('To remove your sign-up record from our servers, confirm the email you signed up with:')?.trim()
-      || '';
+    let email = data.userProfile?.email || '';
+    if (!email) {
+      // Older profiles didn't store the sign-up email. Cancelling this prompt aborts the
+      // whole deletion — Escape must never destroy data.
+      const entered = window.prompt('To remove your sign-up record from our servers, confirm the email you signed up with:');
+      if (entered === null) return;
+      email = entered.trim();
+    }
     data.showToast('Deleting your data…');
     if (email) await deleteAccount(email);     // best-effort — server record
     await unsyncPush().catch(() => {});        // best-effort — push subscription
@@ -314,9 +319,11 @@ function MainApp() {
               while staying readable (cap stops individual cards from becoming awkwardly large). */}
           <main id="main-content" ref={data.mainRef} className="flex-1 overflow-y-auto px-6 pb-28 lg:px-12 lg:pt-10 lg:pb-12 z-10 custom-scrollbar">
             <div className="w-full lg:max-w-4xl lg:mx-auto">
+              {/* Outside the tab AnimatePresence — mode="wait" supports exactly one child,
+                  and the banner manages its own enter/exit animation. */}
+              {activeTab === 'home' && <InstallBanner />}
               <ErrorBoundary>
                 <AnimatePresence mode="wait">
-            {activeTab === 'home' && <InstallBanner />}
             {activeTab === 'home' && (
               <HomeTab
                 data={data}
